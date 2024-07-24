@@ -274,7 +274,7 @@ const forgotPasswordToken = asyncHandler(async (req, res) => {
     const resetURL = `Hi, Please follow this link to reset Your Password. This link is valid 10 minutes from now. <a href='https://zeenet-frontstore.onrender.com/reset-password/${token}'>Click Here</>`;
     const data = {
       to: email,
-      text: "Zeenet App Developers",
+      text: "Zeenet E-commerce.",
       subject: "Password Reset Link",
       html: resetURL,
     };

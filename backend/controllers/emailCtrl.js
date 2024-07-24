@@ -14,11 +14,11 @@ const transporter = nodemailer.createTransport({
 });
 
   const info = await transporter.sendMail({
-    from: '"Zeenet App Developers" <technologieszeent@gmail.com>', 
-    to:data.to, 
-    subject: data.subject, 
+    from: '"Zeenet E-commerce" <technologieszeent@gmail.com>',
+    to: data.to,
+    subject: data.subject,
     text: data.text,
-    html: data.html, 
+    html: data.html,
   });
 
   console.log("Message sent: %s", info.messageId);
