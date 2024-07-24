@@ -24,13 +24,10 @@ app.use(cors());
 
 app.use(
   cors({
-    origin: (origin, callback) => {
-      if (process.env.ORIGIN.includes(origin)) {
-        return callback(null, true);
-      }
-      return callback(new Error("Not allowed by CORS"));
-    },
-    credentials: true,
+    origin: [
+      "https://zeenet-frontstore.onrender.com/",
+      "https://zeenet-adminapp.onrender.com/",
+    ],
   })
 );
 
