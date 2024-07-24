@@ -25,8 +25,8 @@ app.use(cors());
 app.use(
   cors({
     origin: [
-      "https://zeenet-frontstore.onrender.com/",
-      "https://zeenet-adminapp.onrender.com/",
+      "https://zeenet-frontstore.onrender.com",
+      "https://zeenet-adminapp.onrender.com",
     ],
   })
 );
