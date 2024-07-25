@@ -25,12 +25,13 @@ app.use(cors());
 app.use(
   cors({
     origin: [
+      "http://localhost:3000",
+      "http://localhost:3001",
       "https://zeenet-frontstore.onrender.com",
       "https://zeenet-adminapp.onrender.com",
     ],
   })
-);
-
+); 
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));

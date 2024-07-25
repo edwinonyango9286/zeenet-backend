@@ -12,6 +12,7 @@ const sendEmail = require("../controllers/emailCtrl");
 const emailValidator = require("email-validator");
 
 const createUser = asyncHandler(async (req, res) => {
+  
   try {
     const email = req.body.email;
     if (emailValidator.validate(email)) {
@@ -158,9 +159,9 @@ const updateAUser = asyncHandler(async (req, res) => {
 });
 
 const saveUserAddress = asyncHandler(async (req, res) => {
-  const { _id } = req.user;
-  validateMongodbId(_id);
   try {
+    const { _id } = req.user;
+    validateMongodbId(_id);
     const updatedUser = await User.findByIdAndUpdate(
       _id,
       { address: req?.body?.address },
@@ -185,9 +186,9 @@ const getAllUsers = asyncHandler(async (req, res) => {
 });
 
 const getAUser = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-  validateMongodbId(id);
   try {
+    const { id } = req.params;
+    validateMongodbId(id);
     const getAUsers = await User.findById(id);
     res.json({
       getAUsers,
@@ -198,9 +199,9 @@ const getAUser = asyncHandler(async (req, res) => {
 });
 
 const deleteAUser = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-  validateMongodbId(id);
   try {
+    const { id } = req.params;
+    validateMongodbId(id);
     const deletedUsers = await User.findByIdAndDelete(id);
     res.json({
       deletedUsers,
