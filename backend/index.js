@@ -18,10 +18,7 @@ const uploadRouter = require("./routes/uploadRoute");
 const cors = require("cors");
 
 const app = express();
-connect();
-app.use(morgan("dev"));
 app.use(cors());
-
 app.use(
   cors({
     origin: [
@@ -30,11 +27,14 @@ app.use(
       "https://zeenet-frontstore.onrender.com",
       "https://zeenet-adminapp.onrender.com",
     ],
+    credentials: true,
   })
-); 
+);
 
+connect();
+app.use(morgan("dev"));
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 app.use("/api/user", authRouter);

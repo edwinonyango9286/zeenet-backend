@@ -12,9 +12,8 @@ const sendEmail = require("../controllers/emailCtrl");
 const emailValidator = require("email-validator");
 
 const createUser = asyncHandler(async (req, res) => {
-  
+  const email = req.body.email;
   try {
-    const email = req.body.email;
     if (emailValidator.validate(email)) {
       const user = await User.findOne({ email: email });
       if (!user) {
@@ -35,63 +34,67 @@ const createUser = asyncHandler(async (req, res) => {
 
 const loginUserCtrl = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
-  const findUser = await User.findOne({ email });
-  if (findUser && (await findUser.isPasswordMatched(password))) {
-    const refreshToken = generateRefreshToken(findUser?._id);
-    const updateUser = await User.findByIdAndUpdate(
-      findUser.id,
-      {
-        refreshToken: refreshToken,
-      },
-      {
-        new: true,
-      }
-    );
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      maxAge: 72 * 60 * 60 * 1000,
-    });
-    res.json({
-      _id: findUser?._id,
-      firstname: findUser?.firstname,
-      lastname: findUser?.lastname,
-      email: findUser?.email,
-      mobile: findUser?.mobile,
-      token: generateToken(findUser?._id),
-    });
-  } else {
-    throw new Error("Wrong email or password.");
+  try {
+    const findUser = await User.findOne({ email });
+    if (findUser && (await findUser.isPasswordMatched(password))) {
+      const refreshToken = generateRefreshToken(findUser?._id);
+      const updateUser = await User.findByIdAndUpdate(
+        findUser.id,
+        {
+          refreshToken: refreshToken,
+        },
+        {
+          new: true,
+        }
+      );
+      res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        maxAge: 72 * 60 * 60 * 1000,
+      });
+      res.json({
+        _id: findUser?._id,
+        firstname: findUser?.firstname,
+        lastname: findUser?.lastname,
+        email: findUser?.email,
+        mobile: findUser?.mobile,
+        token: generateToken(findUser?._id),
+      });
+    } else {
+      throw new Error("Wrong email or password.");
+    }
+  } catch (error) {
+    throw new Error(error);
   }
 });
 
 const adminLogin = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
-  const findAdmin = await User.findOne({ email });
-  if (findAdmin.role !== "admin") throw new Error("Not Authorised");
-  if (findAdmin && (await findAdmin.isPasswordMatched(password))) {
-    const refreshToken = await generateRefreshToken(findAdmin?._id);
-    const updateUser = await User.findByIdAndUpdate(
-      findAdmin.id,
-      {
-        refreshToken: refreshToken,
-      },
-      { new: true }
-    );
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      maxAge: 72 * 60 * 60 * 1000,
-    });
-    res.json({
-      _id: findAdmin?._id,
-      firstname: findAdmin?.firstname,
-      lastname: findAdmin?.lastname,
-      email: findAdmin?.email,
-      mobile: findAdmin?.mobile,
-      token: generateToken(findAdmin?._id),
-    });
-  } else {
-    throw new Error("Invalid email or password.");
+
+  const user = await User.findOne({ email });
+  if (!user || user.role !== "admin") {
+    throw new Error("Not authorised.");
   }
+
+  if (!(await user.isPasswordMatched(password))) {
+    throw new Error("Wrong email or password.");
+  }
+
+  const refreshToken = await generateRefreshToken(user._id);
+  await User.findByIdAndUpdate(user._id, { refreshToken }, { new: true });
+
+  res.cookie("refreshToken", refreshToken, {
+    httpOnly: true,
+    maxAge: 72 * 60 * 60 * 1000,
+  });
+
+  res.json({
+    _id: user._id,
+    firstname: user.firstname,
+    lastname: user.lastname,
+    email: user.email,
+    mobile: user.mobile,
+    token: generateToken(user._id),
+  });
 });
 
 const handleRefreshToken = asyncHandler(async (req, res) => {
@@ -116,6 +119,7 @@ const logout = asyncHandler(async (req, res) => {
   const user = await User.findOne({ refreshToken });
   if (!user) {
     res.clearCookie("refreshToken", {
+      sameSite: none,
       httpOnly: true,
       secure: true,
     });
@@ -175,7 +179,6 @@ const saveUserAddress = asyncHandler(async (req, res) => {
   }
 });
 
-// Getting all users from the database
 const getAllUsers = asyncHandler(async (req, res) => {
   try {
     const getUsers = await User.find();

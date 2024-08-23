@@ -3,7 +3,7 @@ const sharp = require("sharp");
 const path = require("path");
 const fs = require("fs");
 
-const  storage = multer.diskStorage({
+const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, path.join(__dirname, "../public/images/"));
   },
@@ -42,7 +42,6 @@ const productImgResize = async (req, res, next) => {
   next();
 };
 
-
 const blogImgResize = async (req, res, next) => {
   if (!req.files) return next();
   await Promise.all(
@@ -57,6 +56,5 @@ const blogImgResize = async (req, res, next) => {
   );
   next();
 };
-
 
 module.exports = { uploadPhoto, productImgResize, blogImgResize };

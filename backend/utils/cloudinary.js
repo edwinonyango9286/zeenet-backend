@@ -8,36 +8,44 @@ cloudinary.config({
 
 const cloudinaryUploadImg = async (fileToUploads) => {
   return new Promise((resolve) => {
-    cloudinary.uploader.upload(fileToUploads, (result) => {
-      resolve(
-        {
-          url: result.secure_url,
-          asset_id: result.asset_id, 
-          public_id: result.public_id,
-        },
-        {
-          resource_type: "auto",
-        }
-      );
-    });
+    cloudinary.uploader.upload(
+      fileToUploads,
+      // { folder: "Zeenet" },
+      (result) => {
+        resolve(
+          {
+            url: result.secure_url,
+            asset_id: result.asset_id,
+            public_id: result.public_id,
+          },
+          {
+            resource_type: "auto",
+          }
+        );
+      }
+    );
   });
 };
 
-
-const cloudinaryDeleteImg = async (filetoDelete) => {
+const cloudinaryDeleteImg = async (fileToDelete) => {
   return new Promise((resolve) => {
-    cloudinary.uploader.destroy(filetoDelete), (result) => {
-      resolve({
-        url: result.secure_url,
-        asset_id: result.asset_id,
-        public_id: result.public_id,
-      }, {
-        resource_type: "auto",
+    cloudinary.uploader.destroy(
+      fileToDelete,
+      // { folder: "Zeenet" },
+      (result) => {
+        resolve(
+          {
+            url: result.secure_url,
+            asset_id: result.asset_id,
+            public_id: result.public_id,
+          },
+          {
+            resource_type: "auto",
+          }
+        );
       }
-      )
-    }
-  })
-}
-
+    );
+  });
+};
 
 module.exports = { cloudinaryUploadImg, cloudinaryDeleteImg };
