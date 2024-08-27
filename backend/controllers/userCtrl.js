@@ -12,94 +12,105 @@ const sendEmail = require("../controllers/emailCtrl");
 const emailValidator = require("email-validator");
 
 const createUser = asyncHandler(async (req, res) => {
-  const email = req.body.email;
-  try {
-    if (emailValidator.validate(email)) {
-      const user = await User.findOne({ email: email });
-      if (!user) {
-        const newUser = await User.create(req.body);
-        res.json(newUser);
-      } else {
-        throw new Error(
-          "An account with this email already exist. Login instead."
-        );
-      }
-    } else {
-      throw new Error("Please enter a valid email address.");
-    }
-  } catch (error) {
-    throw new Error(error);
+  const { firstname, lastname, email, mobile, password } = req.body;
+  //Input validation
+  if (!firstname || !lastname || !email || !mobile || !password) {
+    throw new Error("Please fill in all the required fields.");
   }
+  if (password.length < 8) {
+    throw new Error("Password must be at least 8 characters long.");
+  }
+  if (!emailValidator.validate(email)) {
+    throw new Error("Please provide a valid email address.");
+  }
+  const user = await User.findOne({ email });
+  if (user) {
+    throw new Error(
+      "An account with this email already exists. Login instead."
+    );
+  }
+  const newUser = await User.create(req.body);
+  res.json(newUser);
 });
 
-const loginUserCtrl = asyncHandler(async (req, res) => {
+const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
-  try {
-    const findUser = await User.findOne({ email });
-    if (findUser && (await findUser.isPasswordMatched(password))) {
-      const refreshToken = generateRefreshToken(findUser?._id);
-      const updateUser = await User.findByIdAndUpdate(
-        findUser.id,
-        {
-          refreshToken: refreshToken,
-        },
-        {
-          new: true,
-        }
-      );
-      res.cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        maxAge: 72 * 60 * 60 * 1000,
-      });
-      res.json({
-        _id: findUser?._id,
-        firstname: findUser?.firstname,
-        lastname: findUser?.lastname,
-        email: findUser?.email,
-        mobile: findUser?.mobile,
-        token: generateToken(findUser?._id),
-      });
-    } else {
-      throw new Error("Wrong email or password.");
-    }
-  } catch (error) {
-    throw new Error(error);
+  //Input validation at
+  if (!email || !password) {
+    throw new Error("Please fill in all the required fields.");
+  }
+  //Password validation
+  if (password.length < 8) {
+    throw new Error("Password must be at least 8 characters long.");
+  }
+  if (!emailValidator.validate(email)) {
+    throw new Error("Please provide a valid email address.");
+  }
+  const user = await User.findOne({ email });
+  if (user && (await user.isPasswordMatched(password))) {
+    const refreshToken = generateRefreshToken(user._id);
+    user.refreshToken = refreshToken;
+    await user.save();
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      maxAge: parseInt(process.env.REFRESH_TOKEN_MAX_AGE),
+    });
+    res.json({
+      _id: user._id,
+      firstname: user.firstname,
+      lastname: user.lastname,
+      email: user.email,
+      mobile: user.mobile,
+      avatar: user.avatar,
+      token: generateToken(user._id),
+    });
+  } else {
+    throw new Error("Wrong email or password.");
   }
 });
 
 const adminLogin = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
-
+  //Input validation at
+  if (!email || !password) {
+    throw new Error("Please fill in all the required fields.");
+  }
+  //Password validation
+  if (password.length < 8) {
+    throw new Error("Password must be at least 8 characters long.");
+  }
+  if (!emailValidator.validate(email)) {
+    throw new Error("Please provide a valid email address.");
+  }
   const user = await User.findOne({ email });
   if (!user || user.role !== "admin") {
     throw new Error("Not authorised.");
   }
-
   if (!(await user.isPasswordMatched(password))) {
     throw new Error("Wrong email or password.");
   }
-
-  const refreshToken = await generateRefreshToken(user._id);
-  await User.findByIdAndUpdate(user._id, { refreshToken }, { new: true });
+  const refreshToken = generateRefreshToken(user._id);
+  user.refreshToken = refreshToken;
+  await user.save();
 
   res.cookie("refreshToken", refreshToken, {
     httpOnly: true,
-    maxAge: 72 * 60 * 60 * 1000,
+    maxAge: parseInt(process.env.REFRESH_TOKEN_MAX_AGE),
   });
-
   res.json({
     _id: user._id,
     firstname: user.firstname,
     lastname: user.lastname,
     email: user.email,
     mobile: user.mobile,
+    avatar: user.avatar,
     token: generateToken(user._id),
   });
 });
 
 const handleRefreshToken = asyncHandler(async (req, res) => {
   const cookie = req.cookies;
-  if (!cookie?.refreshToken) throw new Error("No refresh token in cookies.");
+  if (!cookie.refreshToken) throw new Error("No refresh token in cookies.");
   const refreshToken = cookie.refreshToken;
   const user = await User.findOne({ refreshToken });
   if (!user) throw new Error("Refresh token does not matched.");
@@ -107,14 +118,14 @@ const handleRefreshToken = asyncHandler(async (req, res) => {
     if (err || user.id !== decoded.id) {
       throw new Error("Something wrong with the refreshtoken...");
     }
-    const accessToken = generateToken(user?._id);
+    const accessToken = generateToken(user._id);
     res.json({ accessToken });
   });
 });
 
 const logout = asyncHandler(async (req, res) => {
   const cookie = req.cookies;
-  if (!cookie?.refreshToken) throw new Error("No refresh token in cookies.");
+  if (!cookie.refreshToken) throw new Error("No refresh token in cookies.");
   const refreshToken = cookie.refreshToken;
   const user = await User.findOne({ refreshToken });
   if (!user) {
@@ -141,117 +152,89 @@ const logout = asyncHandler(async (req, res) => {
 const updateAUser = asyncHandler(async (req, res) => {
   const { _id } = req.user;
   validateMongodbId(_id);
-  try {
-    const updatedUser = await User.findByIdAndUpdate(
-      _id,
-      {
-        firstname: req?.body?.firstname,
-        lastname: req?.body?.lastname,
-        email: req?.body?.email,
-        mobile: req?.body?.mobile,
-      },
-      {
-        new: true,
-      }
-    );
-    res.json({
-      updatedUser,
-    });
-  } catch (error) {
-    throw new Error(error);
-  }
+  const updatedUser = await User.findByIdAndUpdate(
+    _id,
+    {
+      firstname: req.body.firstname,
+      lastname: req.body.lastname,
+      email: req.body.email,
+      mobile: req.body.mobile,
+    },
+    {
+      new: true,
+    }
+  );
+  res.json({
+    updatedUser,
+  });
 });
 
 const saveUserAddress = asyncHandler(async (req, res) => {
-  try {
-    const { _id } = req.user;
-    validateMongodbId(_id);
-    const updatedUser = await User.findByIdAndUpdate(
-      _id,
-      { address: req?.body?.address },
-      {
-        new: true,
-      }
-    );
-    res.json(updatedUser);
-  } catch (error) {
-    throw new Error(error);
-  }
+  const { _id } = req.user;
+  validateMongodbId(_id);
+  const updatedUser = await User.findByIdAndUpdate(
+    _id,
+    { address: req.body.address },
+    {
+      new: true,
+    }
+  );
+  res.json(updatedUser);
 });
 
 const getAllUsers = asyncHandler(async (req, res) => {
-  try {
-    const getUsers = await User.find();
-    res.json(getUsers);
-  } catch (error) {
-    throw new Error(error);
-  }
+  const getUsers = await User.find();
+  res.json(getUsers);
 });
 
 const getAUser = asyncHandler(async (req, res) => {
-  try {
-    const { id } = req.params;
-    validateMongodbId(id);
-    const getAUsers = await User.findById(id);
-    res.json({
-      getAUsers,
-    });
-  } catch (error) {
-    throw new Error(error);
-  }
+  const { id } = req.params;
+  validateMongodbId(id);
+  const getAUsers = await User.findById(id);
+  res.json({
+    getAUsers,
+  });
 });
 
 const deleteAUser = asyncHandler(async (req, res) => {
-  try {
-    const { id } = req.params;
-    validateMongodbId(id);
-    const deletedUsers = await User.findByIdAndDelete(id);
-    res.json({
-      deletedUsers,
-    });
-  } catch (error) {
-    throw new Error(error);
-  }
+  const { id } = req.params;
+  validateMongodbId(id);
+  const deletedUsers = await User.findByIdAndDelete(id);
+  res.json({
+    deletedUsers,
+  });
 });
 
 const blockUser = asyncHandler(async (req, res) => {
   const { id } = req.params;
   validateMongodbId(id);
-  try {
-    const blockedUser = await User.findByIdAndUpdate(
-      id,
-      {
-        isBlocked: true,
-      },
-      { new: true }
-    );
-    res.json({
-      blockedUser,
-      message: "User is blocked and can not make purchases.",
-    });
-  } catch (error) {
-    throw new Error(error);
-  }
+  const blockedUser = await User.findByIdAndUpdate(
+    id,
+    {
+      isBlocked: true,
+    },
+    { new: true }
+  );
+  res.json({
+    blockedUser,
+    message: "User is blocked and can not make purchases.",
+  });
 });
 
 const unBlockUser = asyncHandler(async (req, res) => {
   const { id } = req.params;
   validateMongodbId(id);
-  try {
-    const unblockedUser = await User.findByIdAndUpdate(
-      id,
-      {
-        isBlocked: false,
-      },
-      { new: true }
-    );
-    res.json({
-      unblockedUser,
-      message: "User has been unblocked and can now make purchases.",
-    });
-  } catch (error) {
-    throw new Error(error);
-  }
+  const unblockedUser = await User.findByIdAndUpdate(
+    id,
+    {
+      isBlocked: false,
+    },
+    { new: true }
+  );
+  res.json({
+    unblockedUser,
+    message: "User has been unblocked and can now make purchases.",
+  });
 });
 
 const updatePassword = asyncHandler(async (req, res) => {
@@ -272,21 +255,17 @@ const forgotPasswordToken = asyncHandler(async (req, res) => {
   const { email } = req.body;
   const user = await User.findOne({ email });
   if (!user) throw new Error("User with this email do not exist.");
-  try {
-    const token = await user.createPasswordResetToken();
-    await user.save();
-    const resetURL = `Hi, Please follow this link to reset Your Password. This link is valid 10 minutes from now. <a href='https://zeenet-frontstore.onrender.com/reset-password/${token}'>Click Here</>`;
-    const data = {
-      to: email,
-      text: "Zeenet e-commerce.",
-      subject: "Password reset link",
-      html: resetURL,
-    };
-    sendEmail(data);
-    res.json(token);
-  } catch (error) {
-    throw new Error(error);
-  }
+  const token = await user.createPasswordResetToken();
+  await user.save();
+  const resetURL = `Hi, Please follow this link to reset Your Password. This link is valid 10 minutes from now. <a href='https://zeenet-frontstore.onrender.com/reset-password/${token}'>Click Here</>`;
+  const data = {
+    to: email,
+    text: "Zeenet e-commerce.",
+    subject: "Password reset link",
+    html: resetURL,
+  };
+  sendEmail(data);
+  res.json(token);
 });
 
 const resetPassword = asyncHandler(async (req, res) => {
@@ -308,40 +287,28 @@ const resetPassword = asyncHandler(async (req, res) => {
 const getWishlist = asyncHandler(async (req, res) => {
   const { _id } = req.user;
   validateMongodbId(_id);
-  try {
-    const findUser = await User.findById(_id).populate("wishlist");
-    res.json(findUser);
-  } catch (error) {
-    throw new Error(error);
-  }
+  const user = await User.findById(_id).populate("wishlist");
+  res.json(user);
 });
 
 const adddProductToCart = asyncHandler(async (req, res) => {
   const { productId, quantity, price } = req.body;
   const { _id } = req.user;
   validateMongodbId(_id);
-  try {
-    let newCart = await new Cart({
-      userId: _id,
-      productId,
-      quantity,
-      price,
-    }).save();
-    res.json(newCart);
-  } catch (error) {
-    throw new Error(error);
-  }
+  let newCart = await new Cart({
+    userId: _id,
+    productId,
+    quantity,
+    price,
+  }).save();
+  res.json(newCart);
 });
 
 const getUserCart = asyncHandler(async (req, res) => {
   const { _id } = req.user;
   validateMongodbId(_id);
-  try {
-    const cart = await Cart.find({ userId: _id }).populate("productId");
-    res.json(cart);
-  } catch (error) {
-    throw new Error(error);
-  }
+  const cart = await Cart.find({ userId: _id }).populate("productId");
+  res.json(cart);
 });
 
 const applyCoupon = asyncHandler(async (req, res) => {
@@ -379,68 +346,48 @@ const createOrder = asyncHandler(async (req, res) => {
 
   const { _id } = req.user;
   validateMongodbId(_id);
-  try {
-    const order = await Order.create({
-      shippingInfo,
-      orderedItems,
-      totalPrice,
-      totalPriceAfterDiscount,
-      paymentInfo,
-      user: _id,
-    });
-    res.json({
-      order,
-      success: true,
-    });
-  } catch (error) {
-    throw new Error(error);
-  }
+  const order = await Order.create({
+    shippingInfo,
+    orderedItems,
+    totalPrice,
+    totalPriceAfterDiscount,
+    paymentInfo,
+    user: _id,
+  });
+  res.json({
+    order,
+    success: true,
+  });
 });
 
 const getMyOrders = asyncHandler(async (req, res) => {
   const { _id } = req.user;
-  try {
-    const orders = await Order.find({ user: _id })
-      .populate("user")
-      .populate("orderedItems.product");
-    res.json({ orders });
-  } catch (error) {
-    throw new Error(error);
-  }
+  const orders = await Order.find({ user: _id })
+    .populate("user")
+    .populate("orderedItems.product");
+  res.json({ orders });
 });
 const getAllOrders = asyncHandler(async (req, res) => {
-  try {
-    const orders = await Order.find().populate("user");
-    res.json({ orders });
-  } catch (error) {
-    throw new Error(error);
-  }
+  const orders = await Order.find().populate("user");
+  res.json({ orders });
 });
 
 const getASingleOrder = asyncHandler(async (req, res) => {
   const { id } = req.params;
   validateMongodbId(id);
-  try {
-    const order = await Order.findOne({ _id: id }).populate(
-      "orderedItems.product"
-    );
-    res.json({ order });
-  } catch (error) {
-    throw new Error(error);
-  }
+  const order = await Order.findOne({ _id: id }).populate(
+    "orderedItems.product"
+  );
+  res.json({ order });
 });
 
 const updateOrderStatus = asyncHandler(async (req, res) => {
   const { id } = req.params;
   validateMongodbId(id);
-  try {
-    const order = await Order.findById(id);
-    order.orderStatus = req.body.status;
-    await order.save();
-    res.json({ order });
-  } catch (error) {
-    throw new Error(error);
-  }
+  const order = await Order.findById(id);
+  order.orderStatus = req.body.status;
+  await order.save();
+  res.json({ order });
 });
 
 const getMonthWiseOrderIncome = asyncHandler(async (req, res) => {
@@ -528,7 +475,7 @@ const getYearlyOrders = asyncHandler(async (req, res) => {
 
 module.exports = {
   createUser,
-  loginUserCtrl,
+  loginUser,
   getAllUsers,
   getAUser,
   deleteAUser,

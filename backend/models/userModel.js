@@ -35,6 +35,11 @@ var userSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
+    avatar: {
+      type: String,
+      default:
+        "https://www.hotelbooqi.com/wp-content/uploads/2021/12/128-1280406_view-user-icon-png-user-circle-icon-png.png",
+    },
     password: {
       type: String,
       required: true,
@@ -48,7 +53,6 @@ var userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    
     cart: {
       type: Array,
       default: [],
@@ -65,6 +69,7 @@ var userSchema = new mongoose.Schema(
     ],
     refreshToken: {
       type: String,
+      require: false,
     },
     passwordChangedAt: Date,
     passwordResetToken: String,
@@ -73,7 +78,6 @@ var userSchema = new mongoose.Schema(
 
   { timestamps: true }
 );
-
 
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) {
