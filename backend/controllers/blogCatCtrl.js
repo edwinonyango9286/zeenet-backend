@@ -1,58 +1,41 @@
 const Category = require("../models/blogCategoryModel");
-const asyncHandler = require("express-async-handler");
+const expressAsyncHandler = require("express-async-handler");
 const validateMongodbId = require("../utils/validateMongodbId");
 
-const createaCategory = asyncHandler(async (req, res) => {
-  try {
-    const newCategory = await Category.create(req.body);
-    res.json(newCategory);
-  } catch (error) {
-    throw new Error(error);
-  }
+const createaCategory = expressAsyncHandler(async (req, res) => {
+  const newCategory = await Category.create(req.body);
+  res.json(newCategory);
 });
 
-const updateaCategory = asyncHandler(async (req, res) => {
+const updateaCategory = expressAsyncHandler(async (req, res) => {
   const { id } = req.params;
   validateMongodbId(id);
-  try {
-    const updatedCategory = await Category.findByIdAndUpdate(id, req.body, {
-      new: true,
-    });
-    res.json(updatedCategory);
-  } catch (error) {
-    throw new Error(error);
-  }
+
+  const updatedCategory = await Category.findByIdAndUpdate(id, req.body, {
+    new: true,
+  });
+  res.json(updatedCategory);
 });
 
-const deleteaCategory = asyncHandler(async (req, res) => {
+const deleteaCategory = expressAsyncHandler(async (req, res) => {
   const { id } = req.params;
   validateMongodbId(id);
-  try {
-    const deletedCategory = await Category.findByIdAndDelete(id);
-    res.json(deletedCategory);
-  } catch (error) {
-    throw new Error(error);
-  }
+
+  const deletedCategory = await Category.findByIdAndDelete(id);
+  res.json(deletedCategory);
 });
 
-const getaCategory = asyncHandler(async (req, res) => {
+const getaCategory = expressAsyncHandler(async (req, res) => {
   const { id } = req.params;
   validateMongodbId(id);
-  try {
-    const getaCategory = await Category.findById(id);
-    res.json(getaCategory);
-  } catch (error) {
-    throw new Error(error);
-  }
+
+  const getaCategory = await Category.findById(id);
+  res.json(getaCategory);
 });
 
-const getallCategories = asyncHandler(async (req, res) => {
-  try {
-    const getallCategories = await Category.find();
-    res.json(getallCategories);
-  } catch (error) {
-    throw new Error(error);
-  }
+const getallCategories = expressAsyncHandler(async (req, res) => {
+  const getallCategories = await Category.find();
+  res.json(getallCategories);
 });
 
 module.exports = {

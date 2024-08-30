@@ -2,7 +2,7 @@ const User = require("../models/userModel");
 const Cart = require("../models/cartModel");
 const Coupon = require("../models/couponModel");
 const Order = require("../models/orderModel");
-const asyncHandler = require("express-async-handler");
+const expressAsyncHandler = require("express-async-handler");
 const { generateToken } = require("../config/jwtToken");
 const validateMongodbId = require("../utils/validateMongodbId");
 const { generateRefreshToken } = require("../config/refreshToken");
@@ -10,16 +10,15 @@ const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 const sendEmail = require("../controllers/emailCtrl");
 const emailValidator = require("email-validator");
+const validatePassword = require("../utils/validatePassword");
 
-const createUser = asyncHandler(async (req, res) => {
+const createUser = expressAsyncHandler(async (req, res) => {
   const { firstname, lastname, email, mobile, password } = req.body;
   //Input validation
   if (!firstname || !lastname || !email || !mobile || !password) {
     throw new Error("Please fill in all the required fields.");
   }
-  if (password.length < 8) {
-    throw new Error("Password must be at least 8 characters long.");
-  }
+  validatePassword(password);
   if (!emailValidator.validate(email)) {
     throw new Error("Please provide a valid email address.");
   }
@@ -33,19 +32,16 @@ const createUser = asyncHandler(async (req, res) => {
   res.json(newUser);
 });
 
-const loginUser = asyncHandler(async (req, res) => {
+const loginUser = expressAsyncHandler(async (req, res) => {
   const { email, password } = req.body;
-  //Input validation at
+  //Input validation
   if (!email || !password) {
     throw new Error("Please fill in all the required fields.");
-  }
-  //Password validation
-  if (password.length < 8) {
-    throw new Error("Password must be at least 8 characters long.");
   }
   if (!emailValidator.validate(email)) {
     throw new Error("Please provide a valid email address.");
   }
+  validatePassword(password);
   const user = await User.findOne({ email });
   if (user && (await user.isPasswordMatched(password))) {
     const refreshToken = generateRefreshToken(user._id);
@@ -69,16 +65,13 @@ const loginUser = asyncHandler(async (req, res) => {
   }
 });
 
-const adminLogin = asyncHandler(async (req, res) => {
+const adminLogin = expressAsyncHandler(async (req, res) => {
   const { email, password } = req.body;
-  //Input validation at
+  //Input validation
   if (!email || !password) {
     throw new Error("Please fill in all the required fields.");
   }
-  //Password validation
-  if (password.length < 8) {
-    throw new Error("Password must be at least 8 characters long.");
-  }
+  validatePassword(password);
   if (!emailValidator.validate(email)) {
     throw new Error("Please provide a valid email address.");
   }
@@ -92,7 +85,6 @@ const adminLogin = asyncHandler(async (req, res) => {
   const refreshToken = generateRefreshToken(user._id);
   user.refreshToken = refreshToken;
   await user.save();
-
   res.cookie("refreshToken", refreshToken, {
     httpOnly: true,
     maxAge: parseInt(process.env.REFRESH_TOKEN_MAX_AGE),
@@ -108,7 +100,7 @@ const adminLogin = asyncHandler(async (req, res) => {
   });
 });
 
-const handleRefreshToken = asyncHandler(async (req, res) => {
+const handleRefreshToken = expressAsyncHandler(async (req, res) => {
   const cookie = req.cookies;
   if (!cookie.refreshToken) throw new Error("No refresh token in cookies.");
   const refreshToken = cookie.refreshToken;
@@ -123,7 +115,7 @@ const handleRefreshToken = asyncHandler(async (req, res) => {
   });
 });
 
-const logout = asyncHandler(async (req, res) => {
+const logout = expressAsyncHandler(async (req, res) => {
   const cookie = req.cookies;
   if (!cookie.refreshToken) throw new Error("No refresh token in cookies.");
   const refreshToken = cookie.refreshToken;
@@ -149,16 +141,18 @@ const logout = asyncHandler(async (req, res) => {
   res.sendStatus(204);
 });
 
-const updateAUser = asyncHandler(async (req, res) => {
+const updateAUser = expressAsyncHandler(async (req, res) => {
+  console.log(req.user);
   const { _id } = req.user;
   validateMongodbId(_id);
+  const { firstname, lastname, email, mobile } = req.body;
   const updatedUser = await User.findByIdAndUpdate(
     _id,
     {
-      firstname: req.body.firstname,
-      lastname: req.body.lastname,
-      email: req.body.email,
-      mobile: req.body.mobile,
+      firstname: firstname,
+      lastname: lastname,
+      email: email,
+      mobile: mobile,
     },
     {
       new: true,
@@ -169,7 +163,7 @@ const updateAUser = asyncHandler(async (req, res) => {
   });
 });
 
-const saveUserAddress = asyncHandler(async (req, res) => {
+const saveUserAddress = expressAsyncHandler(async (req, res) => {
   const { _id } = req.user;
   validateMongodbId(_id);
   const updatedUser = await User.findByIdAndUpdate(
@@ -182,21 +176,24 @@ const saveUserAddress = asyncHandler(async (req, res) => {
   res.json(updatedUser);
 });
 
-const getAllUsers = asyncHandler(async (req, res) => {
+const getAllUsers = expressAsyncHandler(async (req, res) => {
   const getUsers = await User.find();
   res.json(getUsers);
 });
 
-const getAUser = asyncHandler(async (req, res) => {
+const getAUser = expressAsyncHandler(async (req, res) => {
   const { id } = req.params;
   validateMongodbId(id);
-  const getAUsers = await User.findById(id);
+  const user = await User.findById(id);
+  if (!user) {
+    throw new Error("User not found.");
+  }
   res.json({
-    getAUsers,
+    user,
   });
 });
 
-const deleteAUser = asyncHandler(async (req, res) => {
+const deleteAUser = expressAsyncHandler(async (req, res) => {
   const { id } = req.params;
   validateMongodbId(id);
   const deletedUsers = await User.findByIdAndDelete(id);
@@ -205,7 +202,7 @@ const deleteAUser = asyncHandler(async (req, res) => {
   });
 });
 
-const blockUser = asyncHandler(async (req, res) => {
+const blockUser = expressAsyncHandler(async (req, res) => {
   const { id } = req.params;
   validateMongodbId(id);
   const blockedUser = await User.findByIdAndUpdate(
@@ -221,7 +218,7 @@ const blockUser = asyncHandler(async (req, res) => {
   });
 });
 
-const unBlockUser = asyncHandler(async (req, res) => {
+const unBlockUser = expressAsyncHandler(async (req, res) => {
   const { id } = req.params;
   validateMongodbId(id);
   const unblockedUser = await User.findByIdAndUpdate(
@@ -237,9 +234,10 @@ const unBlockUser = asyncHandler(async (req, res) => {
   });
 });
 
-const updatePassword = asyncHandler(async (req, res) => {
+const updatePassword = expressAsyncHandler(async (req, res) => {
   const { _id } = req.user;
   const { password } = req.body;
+  validatePassword(password);
   validateMongodbId(_id);
   const user = await User.findById(_id);
   if (password) {
@@ -251,10 +249,10 @@ const updatePassword = asyncHandler(async (req, res) => {
   }
 });
 
-const forgotPasswordToken = asyncHandler(async (req, res) => {
+const forgotPasswordToken = expressAsyncHandler(async (req, res) => {
   const { email } = req.body;
   const user = await User.findOne({ email });
-  if (!user) throw new Error("User with this email do not exist.");
+  if (!user) throw new Error("User with this email do not exists.");
   const token = await user.createPasswordResetToken();
   await user.save();
   const resetURL = `Hi, Please follow this link to reset Your Password. This link is valid 10 minutes from now. <a href='https://zeenet-frontstore.onrender.com/reset-password/${token}'>Click Here</>`;
@@ -268,15 +266,16 @@ const forgotPasswordToken = asyncHandler(async (req, res) => {
   res.json(token);
 });
 
-const resetPassword = asyncHandler(async (req, res) => {
+const resetPassword = expressAsyncHandler(async (req, res) => {
   const { password } = req.body;
+  validatePassword(password);
   const { token } = req.params;
   const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
   const user = await User.findOne({
     passwordResetToken: hashedToken,
     passwordResetExpires: { $gt: Date.now() },
   });
-  if (!user) throw new Error(" Token expired, please try again later.");
+  if (!user) throw new Error("Please initiate reset password process again.");
   user.password = password;
   user.passwordResetToken = undefined;
   user.passwordResetExpires = undefined;
@@ -284,14 +283,14 @@ const resetPassword = asyncHandler(async (req, res) => {
   res.json(user);
 });
 
-const getWishlist = asyncHandler(async (req, res) => {
+const getWishlist = expressAsyncHandler(async (req, res) => {
   const { _id } = req.user;
   validateMongodbId(_id);
   const user = await User.findById(_id).populate("wishlist");
   res.json(user);
 });
 
-const adddProductToCart = asyncHandler(async (req, res) => {
+const adddProductToCart = expressAsyncHandler(async (req, res) => {
   const { productId, quantity, price } = req.body;
   const { _id } = req.user;
   validateMongodbId(_id);
@@ -304,14 +303,14 @@ const adddProductToCart = asyncHandler(async (req, res) => {
   res.json(newCart);
 });
 
-const getUserCart = asyncHandler(async (req, res) => {
+const getUserCart = expressAsyncHandler(async (req, res) => {
   const { _id } = req.user;
   validateMongodbId(_id);
   const cart = await Cart.find({ userId: _id }).populate("productId");
   res.json(cart);
 });
 
-const applyCoupon = asyncHandler(async (req, res) => {
+const applyCoupon = expressAsyncHandler(async (req, res) => {
   const { coupon } = req.body;
   const { _id } = req.user;
   validateMongodbId(_id);
@@ -335,7 +334,7 @@ const applyCoupon = asyncHandler(async (req, res) => {
   res.json(totalAfterDiscount);
 });
 
-const createOrder = asyncHandler(async (req, res) => {
+const createOrder = expressAsyncHandler(async (req, res) => {
   const {
     shippingInfo,
     orderedItems,
@@ -360,19 +359,19 @@ const createOrder = asyncHandler(async (req, res) => {
   });
 });
 
-const getMyOrders = asyncHandler(async (req, res) => {
+const getMyOrders = expressAsyncHandler(async (req, res) => {
   const { _id } = req.user;
   const orders = await Order.find({ user: _id })
     .populate("user")
     .populate("orderedItems.product");
   res.json({ orders });
 });
-const getAllOrders = asyncHandler(async (req, res) => {
+const getAllOrders = expressAsyncHandler(async (req, res) => {
   const orders = await Order.find().populate("user");
   res.json({ orders });
 });
 
-const getASingleOrder = asyncHandler(async (req, res) => {
+const getASingleOrder = expressAsyncHandler(async (req, res) => {
   const { id } = req.params;
   validateMongodbId(id);
   const order = await Order.findOne({ _id: id }).populate(
@@ -381,7 +380,7 @@ const getASingleOrder = asyncHandler(async (req, res) => {
   res.json({ order });
 });
 
-const updateOrderStatus = asyncHandler(async (req, res) => {
+const updateOrderStatus = expressAsyncHandler(async (req, res) => {
   const { id } = req.params;
   validateMongodbId(id);
   const order = await Order.findById(id);
@@ -390,7 +389,7 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
   res.json({ order });
 });
 
-const getMonthWiseOrderIncome = asyncHandler(async (req, res) => {
+const getMonthWiseOrderIncome = expressAsyncHandler(async (req, res) => {
   let monthNames = [
     "January",
     "February",
@@ -431,7 +430,7 @@ const getMonthWiseOrderIncome = asyncHandler(async (req, res) => {
   ]);
   res.json(data);
 });
-const getYearlyOrders = asyncHandler(async (req, res) => {
+const getYearlyOrders = expressAsyncHandler(async (req, res) => {
   let monthNames = [
     "January",
     "February",

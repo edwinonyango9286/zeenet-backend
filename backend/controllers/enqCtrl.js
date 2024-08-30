@@ -1,9 +1,9 @@
 const Enquiry = require("../models/enquiryModel");
-const asyncHandler = require("express-async-handler");
+const expressAsyncHandler = require("express-async-handler");
 const validateMongodbId = require("../utils/validateMongodbId");
 const { response } = require("express");
 
-const createEnquiry = asyncHandler(async (req, res) => {
+const createEnquiry = expressAsyncHandler(async (req, res) => {
   try {
     const newEnquiry = await Enquiry.create(req.body);
     res.json(newEnquiry);
@@ -13,49 +13,35 @@ const createEnquiry = asyncHandler(async (req, res) => {
 });
 
 
-const updateEnquiry = asyncHandler(async (req, res) => {
+const updateEnquiry = expressAsyncHandler(async (req, res) => {
   const { id } = req.params;
   validateMongodbId(id);
-  try {
-    const updatedEnquiry = await Enquiry.findByIdAndUpdate(id, req.body, {
-      new: true,
-    });
-    res.json(updatedEnquiry);
-  } catch (error) {
-    throw new Error(error);
-  }
+
+  const updatedEnquiry = await Enquiry.findByIdAndUpdate(id, req.body, {
+    new: true,
+  });
+  res.json(updatedEnquiry);
 });
 
-const deleteEnquiry = asyncHandler(async (req, res) => {
+const deleteEnquiry = expressAsyncHandler(async (req, res) => {
   const { id } = req.params;
   validateMongodbId(id);
-  try {
-    const deletedenquiry = await Enquiry.findByIdAndDelete(id);
-    res.json(deletedenquiry);
-  } catch (error) {
-    throw new Error(error);
-  }
+
+  const deletedenquiry = await Enquiry.findByIdAndDelete(id);
+  res.json(deletedenquiry);
 });
 
-const getanEnquiry = asyncHandler(async (req, res) => {
+const getanEnquiry = expressAsyncHandler(async (req, res) => {
   const { id } = req.params;
   validateMongodbId(id);
-  try {
-    const getanenquiry = await Enquiry.findById(id);
-    res.json(getanenquiry);
-  } catch (error) {
-    throw new Error(error);
-  }
+  const getanenquiry = await Enquiry.findById(id);
+  res.json(getanenquiry);
 });
 
 
-const getAllEquiries = asyncHandler(async (req, res) => { 
-  try {
-    const getallenquiries = await Enquiry.find();
-    res.json(getallenquiries);
-  } catch (error) {
-    throw new Error(error);
-  }
+const getAllEquiries = expressAsyncHandler(async (req, res) => {
+  const getallenquiries = await Enquiry.find();
+  res.json(getallenquiries);
 });
 
 module.exports = {
