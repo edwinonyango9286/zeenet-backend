@@ -142,7 +142,6 @@ const logout = expressAsyncHandler(async (req, res) => {
 });
 
 const updateAUser = expressAsyncHandler(async (req, res) => {
-  console.log(req.user);
   const { _id } = req.user;
   validateMongodbId(_id);
   const { firstname, lastname, email, mobile } = req.body;

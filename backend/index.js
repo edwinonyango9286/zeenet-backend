@@ -2,7 +2,7 @@ const express = require("express");
 const connect = require("./config/databaseConnection");
 const dotenv = require("dotenv").config();
 const PORT = process.env.PORT || 4000;
-const authRouter = require("./routes/authRoute");
+const userRouter = require("./routes/userRoute");
 const bodyParser = require("body-parser");
 const { notFound, errorHandler } = require("./middlewares/errorHandler");
 const cookieParser = require("cookie-parser");
@@ -37,7 +37,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-app.use("/api/user", authRouter);
+app.use("/api/user", userRouter);
 app.use("/api/products", productRouter);
 app.use("/api/blog", blogRouter);
 app.use("/api/productcategory", productCategoryRouter);
