@@ -246,9 +246,13 @@ const unBlockUser = expressAsyncHandler(async (req, res) => {
 
 const updatePassword = expressAsyncHandler(async (req, res) => {
   const { _id } = req.user;
-  const { password } = req.body;
-  validatePassword(password);
+  const { password, confirmPassword } = req.body;
+  if (!password || !confirmPassword) {
+    throw new Error("Please fill in all the required fields.");
+  }
   validateMongodbId(_id);
+  validatePassword(password);
+  validatePassword(confirmPassword);
   const user = await User.findById(_id);
   if (password) {
     user.password = password;
