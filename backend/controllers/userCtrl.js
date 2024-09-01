@@ -342,6 +342,18 @@ const createOrder = expressAsyncHandler(async (req, res) => {
     paymentInfo,
   } = req.body;
 
+  if (
+    !shippingInfo ||
+    !orderedItems ||
+    !totalPrice ||
+    !totalPriceAfterDiscount ||
+    !paymentInfo
+  ) {
+    throw new Error(
+      "Please verify that you have provided all the order related information."
+    );
+  }
+
   const { _id } = req.user;
   validateMongodbId(_id);
   const order = await Order.create({
@@ -383,7 +395,11 @@ const updateOrderStatus = expressAsyncHandler(async (req, res) => {
   const { id } = req.params;
   validateMongodbId(id);
   const order = await Order.findById(id);
-  order.orderStatus = req.body.status;
+  const { status } = req.body;
+  if (!status) {
+    throw new Error("Select Order status.");
+  }
+  order.orderStatus = status;
   await order.save();
   res.json({ order });
 });
@@ -429,6 +445,7 @@ const getMonthWiseOrderIncome = expressAsyncHandler(async (req, res) => {
   ]);
   res.json(data);
 });
+
 const getYearlyOrders = expressAsyncHandler(async (req, res) => {
   let monthNames = [
     "January",
