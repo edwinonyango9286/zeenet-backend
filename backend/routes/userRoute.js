@@ -25,6 +25,7 @@ const {
   getYearlyOrders,
   getAllOrders,
   getASingleOrder,
+  forgotPasswordAdminToken,
   updateOrderStatus,
 } = require("../controllers/userCtrl");
 const { authMiddleware, isAdmin } = require("../middlewares/authMiddleware");
@@ -32,6 +33,7 @@ const { checkout } = require("../controllers/paymentCtrl");
 const router = express.Router();
 router.post("/register", createUser);
 router.post("/forgot-password-token", forgotPasswordToken);
+router.post("/forgot-password-admin-token", forgotPasswordAdminToken);
 router.put("/reset-password/:token", resetPassword);
 router.put("/update-password", authMiddleware, updatePassword);
 router.post("/login", loginUser);

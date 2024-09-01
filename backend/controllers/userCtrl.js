@@ -145,6 +145,13 @@ const updateAUser = expressAsyncHandler(async (req, res) => {
   const { _id } = req.user;
   validateMongodbId(_id);
   const { firstname, lastname, email, mobile } = req.body;
+  if (!firstname || !lastname || !email || !mobile) {
+    throw new Error("Please fill in all the required fields.");
+  }
+
+  if (!emailValidator.validate(email)) {
+    throw new Error("Please provide a valid email address.");
+  }
   const updatedUser = await User.findByIdAndUpdate(
     _id,
     {
@@ -165,9 +172,13 @@ const updateAUser = expressAsyncHandler(async (req, res) => {
 const saveUserAddress = expressAsyncHandler(async (req, res) => {
   const { _id } = req.user;
   validateMongodbId(_id);
+  const { address } = req.body;
+  if (!address) {
+    throw new Error("Please provide an address.");
+  }
   const updatedUser = await User.findByIdAndUpdate(
     _id,
-    { address: req.body.address },
+    { address: address },
     {
       new: true,
     }
@@ -250,11 +261,52 @@ const updatePassword = expressAsyncHandler(async (req, res) => {
 
 const forgotPasswordToken = expressAsyncHandler(async (req, res) => {
   const { email } = req.body;
+  if (!email) {
+    throw new Error("Please fill in all the required fields.");
+  }
+  if (!emailValidator.validate(email)) {
+    throw new Error("Please provide a valid email address.");
+  }
   const user = await User.findOne({ email });
-  if (!user) throw new Error("User with this email do not exists.");
+  if (!user)
+    throw new Error(
+      "We're having a problem sending you an email. Please try again later."
+    );
   const token = await user.createPasswordResetToken();
   await user.save();
   const resetURL = `Hi, Please follow this link to reset Your Password. This link is valid 10 minutes from now. <a href='https://zeenet-frontstore.onrender.com/reset-password/${token}'>Click Here</>`;
+  const data = {
+    to: email,
+    text: "Zeenet e-commerce.",
+    subject: "Password reset link",
+    html: resetURL,
+  };
+  sendEmail(data);
+  res.json(token);
+});
+
+const forgotPasswordAdminToken = expressAsyncHandler(async (req, res) => {
+  const { email } = req.body;
+  if (!email) {
+    throw new Error("Please fill in all the required fields.");
+  }
+  if (!emailValidator.validate(email)) {
+    throw new Error("Please provide a valid email address.");
+  }
+  const user = await User.findOne({ email });
+  if (!user)
+    throw new Error(
+      "We're having a problem sending you an email. Please try again later."
+    );
+
+  if (user.role !== "admin") {
+    throw new Error(
+      "We're having a problem sending you an email. Please try again later."
+    );
+  }
+  const token = await user.createPasswordResetToken();
+  await user.save();
+  const resetURL = `Hi, Please follow this link to reset Your Password. This link is valid 10 minutes from now. <a href='https://zeenet-adminapp.onrender.com/reset-password/${token}'>Click Here</>`;
   const data = {
     to: email,
     text: "Zeenet e-commerce.",
@@ -515,4 +567,5 @@ module.exports = {
   getAllOrders,
   getASingleOrder,
   updateOrderStatus,
+  forgotPasswordAdminToken,
 };
