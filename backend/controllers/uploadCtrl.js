@@ -1,6 +1,9 @@
-const fs = require("fs")
+const fs = require("fs");
 const expressAsyncHandler = require("express-async-handler");
-const { cloudinaryDeleteImg, cloudinaryUploadImg } = require("../utils/cloudinary");
+const {
+  cloudinaryDeleteImg,
+  cloudinaryUploadImg,
+} = require("../utils/cloudinary");
 
 const uploadImages = expressAsyncHandler(async (req, res) => {
   const uploader = (path) => cloudinaryUploadImg(path, "images");
@@ -16,7 +19,7 @@ const uploadImages = expressAsyncHandler(async (req, res) => {
     return file;
   });
   res.json(images);
-}); 
+});
 
 const deleteImages = expressAsyncHandler(async (req, res) => {
   const { id } = req.params;
@@ -24,8 +27,7 @@ const deleteImages = expressAsyncHandler(async (req, res) => {
   res.json({ message: "Image deleted successfully" });
 });
 
-
-module.exports={
-    uploadImages,
-    deleteImages
-}
+module.exports = {
+  uploadImages,
+  deleteImages,
+};
