@@ -18,6 +18,13 @@ const createUser = expressAsyncHandler(async (req, res) => {
   if (!firstname || !lastname || !email || !mobile || !password) {
     throw new Error("Please fill in all the required fields.");
   }
+
+  // Validate mobile number
+  const mobileRegex = /^(\+?254|0)?(7\d{8})$/;
+  if (!mobileRegex.test(mobile)) {
+    throw new Error("Please provide a valid phone number.");
+  }
+
   validatePassword(password);
   if (!emailValidator.validate(email)) {
     throw new Error("Please provide a valid email address.");
@@ -148,9 +155,12 @@ const updateAUser = expressAsyncHandler(async (req, res) => {
   if (!firstname || !lastname || !email || !mobile) {
     throw new Error("Please fill in all the required fields.");
   }
-
   if (!emailValidator.validate(email)) {
     throw new Error("Please provide a valid email address.");
+  }
+  const mobileRegex = /^(\+?254|0)?(7\d{8})$/;
+  if (!mobileRegex.test(mobile)) {
+    throw new Error("Please provide a valid phone number.");
   }
   const updatedUser = await User.findByIdAndUpdate(
     _id,
@@ -347,6 +357,10 @@ const getWishlist = expressAsyncHandler(async (req, res) => {
 
 const adddProductToCart = expressAsyncHandler(async (req, res) => {
   const { productId, quantity, price } = req.body;
+  //  Input validation
+  if (!productId || !quantity || !price) {
+    throw new Error("Please provide all the required fileds.");
+  }
   const { _id } = req.user;
   validateMongodbId(_id);
   let newCart = await new Cart({
@@ -433,6 +447,7 @@ const getMyOrders = expressAsyncHandler(async (req, res) => {
     .populate("orderedItems.product");
   res.json({ orders });
 });
+
 const getAllOrders = expressAsyncHandler(async (req, res) => {
   const orders = await Order.find().populate("user");
   res.json({ orders });

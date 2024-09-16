@@ -1,14 +1,20 @@
+// Import and setup express app
 const express = require("express");
-const connect = require("./config/databaseConnection");
-const dotenv = require("dotenv");
-dotenv.config();
-const PORT = process.env.PORT || 4000;
-const userRouter = require("./routes/userRoute");
+const app = express({ limit: "50mb" });
+
+// Import and setup middlewares
 const bodyParser = require("body-parser");
-const { notFound, errorHandler } = require("./middlewares/errorHandler");
 const cookieParser = require("cookie-parser");
-const productRouter = require("./routes/productRoutes");
 const morgan = require("morgan");
+
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(cookieParser());
+app.use(morgan("dev"));
+
+// Import and setup routes
+const userRouter = require("./routes/userRoute");
+const productRouter = require("./routes/productRoutes");
 const blogRouter = require("./routes/blogRoute");
 const productCategoryRouter = require("./routes/productCategoryRoute");
 const blogCatRouter = require("./routes/blogCatRoute");
@@ -16,26 +22,6 @@ const BrandRouter = require("./routes/brandRoute");
 const couponRouter = require("./routes/couponRoute");
 const enquiryRouter = require("./routes/enqRoute");
 const uploadRouter = require("./routes/uploadRoute");
-const cors = require("cors");
-
-const app = express();
-app.use(
-  cors({
-    origin: [
-      "http://localhost:3000",
-      "http://localhost:3001",
-      "https://zeenet-frontstore.onrender.com",
-      "https://zeenet-adminapp.onrender.com",
-    ],
-    credentials: true,
-  })
-);
-
-connect();
-app.use(morgan("dev"));
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(cookieParser());
 
 app.use("/api/user", userRouter);
 app.use("/api/products", productRouter);
@@ -47,8 +33,5 @@ app.use("/api/coupon", couponRouter);
 app.use("/api/enquiry", enquiryRouter);
 app.use("/api/upload", uploadRouter);
 
-app.use(notFound);
-app.use(errorHandler);
-app.listen(PORT, () => {
-  console.log(`Server is running  at PORT ${PORT}`);
-});
+// Export the app
+module.exports = app;

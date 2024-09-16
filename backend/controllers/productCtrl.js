@@ -5,19 +5,69 @@ const slugify = require("slugify");
 const validateMongodbId = require("../utils/validateMongodbId");
 
 const createProduct = expressAsyncHandler(async (req, res) => {
-  if (req.body.title) {
-    req.body.slug = slugify(req.body.title);
+  const {
+    title,
+    description,
+    price,
+    category,
+    brand,
+    quantity,
+    images,
+    screensize,
+    tags,
+  } = req.body;
+  //Input validation
+  if (
+    !title ||
+    !description ||
+    !price ||
+    !category ||
+    !brand ||
+    !quantity ||
+    !images ||
+    !screensize ||
+    !tags
+  ) {
+    throw new Error("Please fill in all the required fields");
+  }
+  if (title) {
+    req.body.slug = slugify(title);
   }
   const newProduct = await Product.create(req.body);
   res.json(newProduct);
 });
 
 const updateProduct = expressAsyncHandler(async (req, res) => {
+  const {
+    title,
+    description,
+    price,
+    category,
+    brand,
+    quantity,
+    images,
+    screensize,
+    tags,
+  } = req.body;
+  //Input validation
+  if (
+    !title ||
+    !description ||
+    !price ||
+    !category ||
+    !brand ||
+    !quantity ||
+    !images ||
+    !screensize ||
+    !tags
+  ) {
+    throw new Error("Please fill in all the required fields");
+  }
   const { id } = req.params;
   validateMongodbId(id);
 
-  if (req.body.title) {
-    req.body.slug = slugify(req.body.title);
+  if (title) {
+    req.body.slug = slugify(title);
   }
   const updatedProduct = await Product.findByIdAndUpdate(id, req.body, {
     new: true,
@@ -28,7 +78,6 @@ const updateProduct = expressAsyncHandler(async (req, res) => {
 const deleteProduct = expressAsyncHandler(async (req, res) => {
   const { id } = req.params;
   validateMongodbId(id);
-
   const deleteProduct = await Product.findOneAndDelete({ _id: id });
   res.json(deleteProduct);
 });
@@ -36,13 +85,15 @@ const deleteProduct = expressAsyncHandler(async (req, res) => {
 const getaProduct = expressAsyncHandler(async (req, res) => {
   const { id } = req.params;
   validateMongodbId(id);
-  const findProduct = await Product.findById(id);
-  res.json(findProduct);
+  const product = await Product.findById(id);
+  if (!product) {
+    throw new Error("Product currently out of stock.");
+  }
+  res.json(product);
 });
 
 const getallProducts = expressAsyncHandler(async (req, res) => {
   // Filtering
-
   const queryObj = { ...req.query };
   const excludeFields = ["page", "sort", "limit", "offset", "fields"];
   excludeFields.forEach((el) => delete queryObj[el]);
