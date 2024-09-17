@@ -13,7 +13,7 @@ const origins = [
 ];
 app.use(
   cors({
-    origin: [...origins],
+    origin: "*",
     methods: ["POST", "GET", "PUT", "DELETE", "OPTIONS", "HEAD"],
     credentials: true,
     headers: ["Content-Type", "Authorization", "Access-Control-Allow-Origin"],
