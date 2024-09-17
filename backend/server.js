@@ -5,18 +5,19 @@ dotenv.config();
 
 // Import and setup CORS
 const cors = require("cors");
-const origin = [
+const origins = [
   process.env.ORIGIN_LOCALHOST_3000,
   process.env.ORIGIN_LOCALHOST_3001,
   process.env.ORIGIN_ZEENET_FRONTSTORE,
   process.env.ORIGIN_ZEENET_ADMINAPP,
 ];
-
 app.use(
   cors({
-    origin: origin,
+    origin: [...origins],
     methods: ["POST", "GET", "PUT", "DELETE", "OPTIONS", "HEAD"],
     credentials: true,
+    headers: ["Content-Type", "Authorization", "Access-Control-Allow-Origin"],
+    exposedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
