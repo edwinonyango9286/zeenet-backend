@@ -13,7 +13,17 @@ const origins = [
 ];
 app.use(
   cors({
-    origin: "*",
+    origin: (origin, callback) => {
+      if (
+        origin === "http://localhost:3000" ||
+        origin === "https://zeenet-frontstore.onrender.com" ||
+        origin === "https://zeenet-adminapp.onrender.com"
+      ) {
+        callback(null, origin);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     methods: ["POST", "GET", "PUT", "DELETE", "OPTIONS", "HEAD"],
     credentials: true,
     headers: ["Content-Type", "Authorization", "Access-Control-Allow-Origin"],
