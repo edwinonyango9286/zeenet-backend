@@ -11,14 +11,11 @@ const origins = [
   process.env.ORIGIN_ZEENET_FRONTSTORE,
   process.env.ORIGIN_ZEENET_ADMINAPP,
 ];
+
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (
-        origin === "http://localhost:3000" ||
-        origin === "https://zeenet-frontstore.onrender.com" ||
-        origin === "https://zeenet-adminapp.onrender.com"
-      ) {
+      if (!origin || origins.includes(origin)) {
         callback(null, origin);
       } else {
         callback(new Error("Not allowed by CORS"));
@@ -26,7 +23,7 @@ app.use(
     },
     methods: ["POST", "GET", "PUT", "DELETE", "OPTIONS", "HEAD"],
     credentials: true,
-    headers: ["Content-Type", "Authorization", "Access-Control-Allow-Origin"],
+    allowedHeaders: ["Content-Type", "Authorization"],
     exposedHeaders: ["Content-Type", "Authorization"],
   })
 );
