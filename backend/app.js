@@ -1,6 +1,33 @@
 // Import and setup express app
 const express = require("express");
 const app = express({ limit: "50mb" });
+const dotenv = require("dotenv");
+dotenv.config();
+
+const cors = require("cors");
+const origins = [
+  process.env.ORIGIN_LOCALHOST_3000,
+  process.env.ORIGIN_LOCALHOST_3001,
+  process.env.ORIGIN_ZEENET_FRONTSTORE,
+  process.env.ORIGIN_ZEENET_ADMINAPP,
+];
+
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || origins.includes(origin)) {
+        callback(null, { origin: origin, optionsSuccessStatus: 200 });
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    methods: ["POST", "GET", "PUT", "DELETE", "OPTIONS", "HEAD"],
+    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"],
+    exposedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
 // Import and setup middlewares
 const bodyParser = require("body-parser");
