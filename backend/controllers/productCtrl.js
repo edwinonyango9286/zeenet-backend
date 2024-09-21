@@ -124,23 +124,23 @@ const getallProducts = expressAsyncHandler(async (req, res) => {
 
 const addToWishlist = expressAsyncHandler(async (req, res) => {
   const { _id } = req.user;
-  const { prodId } = req.body;
+  const { productId } = req.body;
   if (!req.user || !_id) {
     throw new Error("Please login to proceed.");
   }
-  if (!prodId) {
+  if (!productId) {
     throw new Error("Product currently out of stock.");
   }
   validateMongodbId(_id);
-  validateMongodbId(prodId);
+  validateMongodbId(productId);
 
   const user = await User.findById(_id);
-  const alreadyadded = user.wishlist.find((id) => id.toString() === prodId);
+  const alreadyadded = user.wishlist.find((id) => id.toString() === productId);
   if (alreadyadded) {
     let user = await User.findByIdAndUpdate(
       _id,
       {
-        $pull: { wishlist: prodId },
+        $pull: { wishlist: productId },
       },
       {
         new: true,
@@ -151,7 +151,7 @@ const addToWishlist = expressAsyncHandler(async (req, res) => {
     let user = await User.findByIdAndUpdate(
       _id,
       {
-        $push: { wishlist: prodId },
+        $push: { wishlist: productId },
       },
       {
         new: true,
