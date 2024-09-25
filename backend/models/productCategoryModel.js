@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-var productcategorySchema = new mongoose.Schema(
+const productcategorySchema = new mongoose.Schema(
   {
     title: {
       type: String,
@@ -15,5 +15,4 @@ var productcategorySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-//Export the model
 module.exports = mongoose.model("ProductCategory", productcategorySchema);

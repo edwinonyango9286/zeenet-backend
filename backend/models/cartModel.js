@@ -4,7 +4,7 @@ const {
   Types: { ObjectId },
 } = require("mongoose");
 
-var cartSchema = new mongoose.Schema(
+const cartSchema = new mongoose.Schema(
   {
     userId: {
       type: ObjectId,

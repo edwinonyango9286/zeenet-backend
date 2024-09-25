@@ -13,7 +13,7 @@ const createProduct = expressAsyncHandler(async (req, res) => {
     brand,
     quantity,
     images,
-    screensize,
+    screenSize,
     tags,
   } = req.body;
   //Input validation
@@ -25,7 +25,7 @@ const createProduct = expressAsyncHandler(async (req, res) => {
     !brand ||
     !quantity ||
     !images ||
-    !screensize ||
+    !screenSize ||
     !tags
   ) {
     throw new Error("Please fill in all the required fields");
@@ -46,7 +46,7 @@ const updateProduct = expressAsyncHandler(async (req, res) => {
     brand,
     quantity,
     images,
-    screensize,
+    screenSize,
     tags,
   } = req.body;
   //Input validation
@@ -58,7 +58,7 @@ const updateProduct = expressAsyncHandler(async (req, res) => {
     !brand ||
     !quantity ||
     !images ||
-    !screensize ||
+    !screenSize ||
     !tags
   ) {
     throw new Error("Please fill in all the required fields");
@@ -94,10 +94,10 @@ const getaProduct = expressAsyncHandler(async (req, res) => {
 
 const getallProducts = expressAsyncHandler(async (req, res) => {
   // Filtering
-  const queryObj = { ...req.query };
+  const queryObject = { ...req.query };
   const excludeFields = ["page", "sort", "limit", "offset", "fields"];
-  excludeFields.forEach((el) => delete queryObj[el]);
-  let queryStr = JSON.stringify(queryObj);
+  excludeFields.forEach((el) => delete queryObject[el]);
+  let queryStr = JSON.stringify(queryObject);
   queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
   let query = Product.find(JSON.parse(queryStr));
   // sorting

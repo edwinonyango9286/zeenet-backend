@@ -1,7 +1,7 @@
 const mongoose = require("mongoose"); 
 const { Schema, Types: { ObjectId } } = require("mongoose");
 
-var blogSchema = new mongoose.Schema(
+const blogSchema = new mongoose.Schema(
   {
     title: {
       type: String,

@@ -54,12 +54,12 @@ const productSchema = new mongoose.Schema(
         url: String,
       },
     ],
-    screensize: {
+    screenSize: {
       type: Number,
       required: true,
-      trim:true,
+      trim: true,
     },
-    
+
     tags: {
       type: String,
       trim: true,
@@ -75,7 +75,7 @@ const productSchema = new mongoose.Schema(
         },
       },
     ],
-    totalrating: {
+    totalRating: {
       type: String,
       default: 4,
     },
