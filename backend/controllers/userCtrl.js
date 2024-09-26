@@ -32,7 +32,7 @@ const createUser = expressAsyncHandler(async (req, res) => {
   const user = await User.findOne({ email });
   if (user) {
     throw new Error(
-      "An account with this email already exists. Login instead."
+      "This email address is already associated with an account. If this account is yours, you can reset your password"
     );
   }
   const newUser = await User.create(req.body);

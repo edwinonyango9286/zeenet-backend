@@ -28,26 +28,34 @@ const userSchema = new mongoose.Schema(
       required: true,
       unique: true,
       lowercase: true,
+      minlength: 2,
+      maxlength: 24,
       trim: true,
     },
     mobile: {
       type: String,
       required: true,
       unique: true,
+      triem: true,
     },
     avatar: {
       type: String,
       default:
         "https://www.hotelbooqi.com/wp-content/uploads/2021/12/128-1280406_view-user-icon-png-user-circle-icon-png.png",
+      trim: true,
     },
     password: {
       type: String,
       required: true,
+      minlength: 8,
+      maxlength: 36,
+      trim: true,
     },
     role: {
       type: String,
       default: "user",
       lowercase: true,
+      trim: true,
     },
     isBlocked: {
       type: Boolean,
@@ -60,6 +68,7 @@ const userSchema = new mongoose.Schema(
     address: {
       type: String,
       default: null,
+      trim: true,
     },
     wishlist: [
       {
@@ -70,6 +79,7 @@ const userSchema = new mongoose.Schema(
     refreshToken: {
       type: String,
       require: false,
+      trim: true,
     },
     passwordChangedAt: Date,
     passwordResetToken: String,
