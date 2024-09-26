@@ -13,14 +13,14 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       minlength: 2,
-      maxlength: 16,
+      maxlength: 32,
       trim: true,
     },
     lastname: {
       type: String,
       required: true,
       minlength: 2,
-      maxlength: 16,
+      maxlength: 32,
       trim: true,
     },
     email: {
@@ -29,7 +29,7 @@ const userSchema = new mongoose.Schema(
       unique: true,
       lowercase: true,
       minlength: 2,
-      maxlength: 24,
+      maxlength: 32,
       trim: true,
     },
     mobile: {
@@ -48,7 +48,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       minlength: 8,
-      maxlength: 36,
+      maxlength: 200,
       trim: true,
     },
     role: {
