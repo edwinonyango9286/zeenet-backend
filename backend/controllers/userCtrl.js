@@ -13,15 +13,15 @@ const emailValidator = require("email-validator");
 const validatePassword = require("../utils/validatePassword");
 
 const createUser = expressAsyncHandler(async (req, res) => {
-  const { firstname, lastname, email, mobile, password } = req.body;
+  const { firstname, lastname, email, phone, password } = req.body;
   //Input validation
-  if (!firstname || !lastname || !email || !mobile || !password) {
+  if (!firstname || !lastname || !email || !phone || !password) {
     throw new Error("Please fill in all the required fields.");
   }
 
-  // Validate mobile number
-  const mobileRegex = /^(\+?254|0)?(7\d{8})$/;
-  if (!mobileRegex.test(mobile)) {
+  // Validate phone number
+  const phoneRegex = /^(\+?254|0)?(7\d{8})$/;
+  if (!phoneRegex.test(phone)) {
     throw new Error("Please provide a valid phone number.");
   }
 
@@ -63,7 +63,7 @@ const loginUser = expressAsyncHandler(async (req, res) => {
       firstname: user.firstname,
       lastname: user.lastname,
       email: user.email,
-      mobile: user.mobile,
+      phone: user.phone,
       avatar: user.avatar,
       token: generateToken(user._id),
     });
@@ -101,7 +101,7 @@ const adminLogin = expressAsyncHandler(async (req, res) => {
     firstname: user.firstname,
     lastname: user.lastname,
     email: user.email,
-    mobile: user.mobile,
+    phone: user.phone,
     avatar: user.avatar,
     token: generateToken(user._id),
   });
@@ -151,15 +151,15 @@ const logout = expressAsyncHandler(async (req, res) => {
 const updateAUser = expressAsyncHandler(async (req, res) => {
   const { _id } = req.user;
   validateMongodbId(_id);
-  const { firstname, lastname, email, mobile } = req.body;
-  if (!firstname || !lastname || !email || !mobile) {
+  const { firstname, lastname, email, phone } = req.body;
+  if (!firstname || !lastname || !email || !phone) {
     throw new Error("Please fill in all the required fields.");
   }
   if (!emailValidator.validate(email)) {
     throw new Error("Please provide a valid email address.");
   }
-  const mobileRegex = /^(\+?254|0)?(7\d{8})$/;
-  if (!mobileRegex.test(mobile)) {
+  const phoneRegex = /^(\+?254|0)?(7\d{8})$/;
+  if (!phoneRegex.test(phone)) {
     throw new Error("Please provide a valid phone number.");
   }
   const updatedUser = await User.findByIdAndUpdate(
@@ -168,7 +168,7 @@ const updateAUser = expressAsyncHandler(async (req, res) => {
       firstname: firstname,
       lastname: lastname,
       email: email,
-      mobile: mobile,
+      phone: phone,
     },
     {
       new: true,

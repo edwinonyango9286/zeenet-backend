@@ -29,7 +29,6 @@ const {
   updateOrderStatus,
 } = require("../controllers/userCtrl");
 const { authMiddleware, isAdmin } = require("../middlewares/authMiddleware");
-const { checkout } = require("../controllers/paymentCtrl");
 const router = express.Router();
 router.post("/register", createUser);
 router.post("/forgot-password-token", forgotPasswordToken);
@@ -43,7 +42,6 @@ router.get("/getusercart", authMiddleware, getUserCart);
 router.post("/addtocart/applycoupon", authMiddleware, applyCoupon);
 router.post("/cart/create-order", authMiddleware, createOrder);
 router.get("/getmyorders", authMiddleware, getMyOrders);
-router.post("/order/checkout", authMiddleware, checkout);
 router.get("/getasingleorder/:id", authMiddleware, isAdmin, getASingleOrder);
 router.get("/getallUsers", authMiddleware, isAdmin, getAllUsers);
 router.get(

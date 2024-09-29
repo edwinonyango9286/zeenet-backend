@@ -12,7 +12,6 @@ const origins = [
   process.env.ORIGIN_ZEENET_ADMINAPP,
 ];
 
-
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -49,6 +48,7 @@ const BrandRouter = require("./routes/brandRoute");
 const couponRouter = require("./routes/couponRoute");
 const enquiryRouter = require("./routes/enqRoute");
 const uploadRouter = require("./routes/uploadRoute");
+const paymentRoute = require("./routes/paymentRoute");
 
 app.use("/api/user", userRouter);
 app.use("/api/products", productRouter);
@@ -59,6 +59,6 @@ app.use("/api/productbrand", BrandRouter);
 app.use("/api/coupon", couponRouter);
 app.use("/api/enquiry", enquiryRouter);
 app.use("/api/upload", uploadRouter);
+app.use("/api/payment", paymentRoute);
 
-// Export the app
 module.exports = app;

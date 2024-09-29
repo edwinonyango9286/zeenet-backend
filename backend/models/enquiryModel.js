@@ -11,7 +11,7 @@ const enquirySchema = new mongoose.Schema({
     required: true,
     trim: true,
   },
-  mobile: {
+  phone: {
     type: String,
     required: true,
     unique: true,

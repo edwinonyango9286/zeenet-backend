@@ -17,19 +17,18 @@ const authMiddleware = asyncHandler(async (req, res, next) => {
       throw new Error("Please login to proceed.");
     }
   } else {
-    throw new Error("There is no token attached to the header.");
+    throw new Error("Please login to proceed.");
   }
 });
 
 const isAdmin = asyncHandler(async (req, res, next) => {
-    const { email } = req.user;
-    const adminUser = await User.findOne({ email });
-    if (adminUser.role !== "admin") {
-        throw new Error("Not authorised.");
-    } else {
-        next();
-    }
-})
+  const { email } = req.user;
+  const adminUser = await User.findOne({ email });
+  if (adminUser.role !== "admin") {
+    throw new Error("Not authorised.");
+  } else {
+    next();
+  }
+});
 
-
-module.exports = {authMiddleware,isAdmin};
+module.exports = { authMiddleware, isAdmin };

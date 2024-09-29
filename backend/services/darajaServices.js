@@ -23,7 +23,7 @@ const generateAccessToken = asyncHandler(async () => {
 
 
 const initiateSTKPush = asyncHandler(
-  async (mobile, amount) => {
+  async (phone, amount) => {
     try {
       const accessToken = await generateAccessToken();
       const response = await axios.post(
@@ -34,9 +34,9 @@ const initiateSTKPush = asyncHandler(
           Timestamp: getTimestamp(),
           TransactionType: "CustomerPayBillOnline",
           Amount: amount,
-          PartyA: mobile,
+          PartyA: phone,
           PartyB: process.env.SAFARICOM_SHORTCODE,
-          mobile: mobile,
+          phone: phone,
           CallBackURL: process.env.STK_CALLBACK_URL,
           AccountReference: accountReference,
           TransactionDesc: transactionDesc,

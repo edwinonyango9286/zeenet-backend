@@ -32,7 +32,7 @@ const userSchema = new mongoose.Schema(
       maxlength: 32,
       trim: true,
     },
-    mobile: {
+    phone: {
       type: String,
       required: true,
       unique: true,
