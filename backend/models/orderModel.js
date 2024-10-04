@@ -37,12 +37,7 @@ const orderSchema = new mongoose.Schema(
         type: String,
         required: true,
       },
-      pincode: {
-        type: String,
-        required: true,
-      },
     },
-
     paymentInfo: {
       mpesaOrderId: {
         type: String,
