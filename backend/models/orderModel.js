@@ -25,7 +25,12 @@ const orderSchema = new mongoose.Schema(
         type: String,
         required: true,
       },
-      city: {
+      county: {
+        type: String,
+        required: true,
+      },
+
+      town: {
         type: String,
         required: true,
       },
