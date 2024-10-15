@@ -11,6 +11,8 @@ const jwt = require("jsonwebtoken");
 const sendEmail = require("../controllers/emailCtrl");
 const emailValidator = require("email-validator");
 const validatePassword = require("../utils/validatePassword");
+const redis = require("../utils/redis");
+const { json } = require("body-parser");
 
 const createUser = expressAsyncHandler(async (req, res) => {
   const { firstname, lastname, email, phone, password } = req.body;
@@ -196,21 +198,27 @@ const saveUserAddress = expressAsyncHandler(async (req, res) => {
   res.json(updatedUser);
 });
 
-const getAllUsers = expressAsyncHandler(async (req, res) => {
-  const getUsers = await User.find();
-  res.json(getUsers);
-});
-
 const getAUser = expressAsyncHandler(async (req, res) => {
   const { id } = req.params;
   validateMongodbId(id);
+  const cacheKey = `user:${id}`;
+  const cachedUser = await redis.get(cacheKey);
+  if (cachedUser) {
+    return res.json(JSON.parse(cachedUser));
+  }
   const user = await User.findById(id);
   if (!user) {
     throw new Error("User not found.");
   }
+  await redis.set(cacheKey, JSON.stringify(user), "EX", 300);
   res.json({
     user,
   });
+});
+
+const getAllUsers = expressAsyncHandler(async (req, res) => {
+  const getUsers = await User.find();
+  res.json(getUsers);
 });
 
 const deleteAUser = expressAsyncHandler(async (req, res) => {
@@ -351,7 +359,13 @@ const resetPassword = expressAsyncHandler(async (req, res) => {
 const getWishlist = expressAsyncHandler(async (req, res) => {
   const { _id } = req.user;
   validateMongodbId(_id);
+  const cacheKey = `user:${_id}:wishlist`;
+  const cachedWishlist = await redis.get(cacheKey);
+  if (cachedWishlist) {
+    return res.json(JSON.parse(cachedWishlist));
+  }
   const user = await User.findById(_id).populate("wishlist");
+  await redis.set(cacheKey, JSON.stringify(user), "EX", 300);
   res.json(user);
 });
 
@@ -375,7 +389,13 @@ const adddProductToCart = expressAsyncHandler(async (req, res) => {
 const getUserCart = expressAsyncHandler(async (req, res) => {
   const { _id } = req.user;
   validateMongodbId(_id);
+  const cacheKey = `cart:${_id}`;
+  const cachedCart = await redis.get(cacheKey);
+  if (cachedCart) {
+    return res.json(JSON.parse(cachedCart));
+  }
   const cart = await Cart.find({ userId: _id }).populate("productId");
+  await redis.set(cacheKey, JSON.stringify(cart), "EX", 300);
   res.json(cart);
 });
 
@@ -442,20 +462,33 @@ const createOrder = expressAsyncHandler(async (req, res) => {
 
 const getMyOrders = expressAsyncHandler(async (req, res) => {
   const { _id } = req.user;
+  const cacheKey = `order:${_id}`;
+  const cachedOrder = await redis.get(cacheKey);
+  if (cachedOrder) {
+    return res.json(JSON.parse(cachedOrder));
+  }
   const orders = await Order.find({ user: _id })
     .populate("user")
     .populate("orderedItems.product");
+  await redis.set(cacheKey, JSON.stringify(orders));
   res.json({ orders });
 });
 
 const getAllOrders = expressAsyncHandler(async (req, res) => {
+  const cacheKey = "order";
+  const cachedOrders = await redis.get(cacheKey);
+  if (cachedOrders) {
+    return res.json(JSON.parse(cachedOrders));
+  }
   const orders = await Order.find().populate("user");
+  await redis.set(cacheKey, JSON.stringify(orders), "EX", 300);
   res.json({ orders });
 });
 
 const getASingleOrder = expressAsyncHandler(async (req, res) => {
   const { id } = req.params;
   validateMongodbId(id);
+  
   const order = await Order.findOne({ _id: id }).populate(
     "orderedItems.product"
   );

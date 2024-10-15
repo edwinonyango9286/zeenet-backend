@@ -11,7 +11,6 @@ const origins = [
   process.env.ORIGIN_ZEENET_FRONTSTORE,
   process.env.ORIGIN_ZEENET_ADMINAPP,
 ];
-
 app.use(
   cors({
     origin: (origin, callback) => {

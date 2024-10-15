@@ -3,6 +3,7 @@ const User = require("../models/userModel");
 const expressAsyncHandler = require("express-async-handler");
 const slugify = require("slugify");
 const validateMongodbId = require("../utils/validateMongodbId");
+const redis = require("../utils/redis");
 
 const createProduct = expressAsyncHandler(async (req, res) => {
   const {
@@ -85,10 +86,16 @@ const deleteProduct = expressAsyncHandler(async (req, res) => {
 const getaProduct = expressAsyncHandler(async (req, res) => {
   const { id } = req.params;
   validateMongodbId(id);
+  const cacheKey = `product:${id}`;
+  const cachedProduct = await redis.get(cacheKey);
+  if (cachedProduct) {
+    return res.json(JSON.parse(cachedProduct));
+  }
   const product = await Product.findById(id);
   if (!product) {
     throw new Error("Product currently out of stock.");
   }
+  await redis.set(cacheKey, JSON.stringify(product), "EX", 300);
   res.json(product);
 });
 
@@ -118,7 +125,24 @@ const getallProducts = expressAsyncHandler(async (req, res) => {
   const limit = parseInt(req.query.limit, 20) || 20;
   const offset = parseInt(req.query.offset) || 0;
   query = query.skip(offset).limit(limit);
+
+  // Check if the products are cached
+  const cacheKey = `products:${JSON.stringify(queryObject)}:${req.query.sort}:${
+    req.query.fields
+  }:${limit}:${offset}`;
+  const cachedProducts = await redis.get(cacheKey);
+  if (cachedProducts) {
+    // Return the cached products
+    return res.json(JSON.parse(cachedProducts));
+  }
+
+  // Retrieve the products from the database
   const products = await query;
+
+  // Cache the products for future requests
+  await redis.set(cacheKey, JSON.stringify(products), "EX", 300);
+
+  // Return the products
   res.json(products);
 });
 
@@ -146,7 +170,10 @@ const addToWishlist = expressAsyncHandler(async (req, res) => {
         new: true,
       }
     );
-    res.json(user);
+    const userWishlist = await User.findById(_id).populate("wishlist");
+    const cacheKey = `user:${_id}:wishlist`;
+    await redis.set(cacheKey, JSON.stringify(userWishlist), "EX", 300);
+    res.json(userWishlist);
   } else {
     let user = await User.findByIdAndUpdate(
       _id,
@@ -157,7 +184,10 @@ const addToWishlist = expressAsyncHandler(async (req, res) => {
         new: true,
       }
     );
-    res.json(user);
+    const userWishlist = await User.findById(_id).populate("wishlist");
+    const cacheKey = `user:${_id}:wishlist`;
+    await redis.set(cacheKey, JSON.stringify(userWishlist), "EX", 300);
+    res.json(userWishlist);
   }
 });
 

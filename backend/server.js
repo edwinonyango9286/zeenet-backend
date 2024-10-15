@@ -3,9 +3,6 @@ const app = require("./app");
 const dotenv = require("dotenv");
 dotenv.config();
 
-// Import and setup CORS
-const cors = require("cors");
-
 // Import and setup error handling
 const { notFound, errorHandler } = require("./middlewares/errorHandler");
 app.use(notFound);
