@@ -5,20 +5,28 @@ const enquirySchema = new mongoose.Schema({
     type: String,
     required: true,
     trim: true,
+    minlength: 2,
+    maxlength: 64,
   },
   email: {
     type: String,
     required: true,
+    unique: true,
+    lowercase: true,
+    minlength: 2,
+    maxlength: 32,
     trim: true,
   },
   phone: {
     type: String,
     required: true,
-    unique: true,
+    trim: true,
   },
-  comment: {
+  enquiry: {
     type: String,
     required: true,
+    minlength: 2,
+    maxlength: 500,
     trim: true,
   },
   status: {

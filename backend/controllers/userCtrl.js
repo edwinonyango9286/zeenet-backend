@@ -475,7 +475,7 @@ const getMyOrders = expressAsyncHandler(async (req, res) => {
 });
 
 const getAllOrders = expressAsyncHandler(async (req, res) => {
-  const cacheKey = "order";
+  const cacheKey = "orders";
   const cachedOrders = await redis.get(cacheKey);
   if (cachedOrders) {
     return res.json(JSON.parse(cachedOrders));
@@ -488,7 +488,7 @@ const getAllOrders = expressAsyncHandler(async (req, res) => {
 const getASingleOrder = expressAsyncHandler(async (req, res) => {
   const { id } = req.params;
   validateMongodbId(id);
-  
+
   const order = await Order.findOne({ _id: id }).populate(
     "orderedItems.product"
   );
