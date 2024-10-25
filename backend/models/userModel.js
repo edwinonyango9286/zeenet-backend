@@ -15,6 +15,7 @@ const userSchema = new mongoose.Schema(
       minlength: 2,
       maxlength: 32,
       trim: true,
+      index: true,
     },
     lastname: {
       type: String,
@@ -22,6 +23,7 @@ const userSchema = new mongoose.Schema(
       minlength: 2,
       maxlength: 32,
       trim: true,
+      index: true,
     },
     email: {
       type: String,
@@ -31,12 +33,14 @@ const userSchema = new mongoose.Schema(
       minlength: 2,
       maxlength: 32,
       trim: true,
+      index: true,
     },
     phone: {
       type: String,
       required: true,
       unique: true,
       triem: true,
+      index: true,
     },
     avatar: {
       type: String,
@@ -76,9 +80,11 @@ const userSchema = new mongoose.Schema(
         ref: "Product",
       },
     ],
+
     refreshToken: {
       type: String,
       require: false,
+      unique: true,
       trim: true,
     },
     passwordChangedAt: Date,
@@ -91,22 +97,25 @@ const userSchema = new mongoose.Schema(
 
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) {
-    next();
+    return next();
   }
-  const salt = await bcrypt.genSaltSync(10);
+  const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
 });
 
 userSchema.methods.isPasswordMatched = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
+
+
+
 userSchema.methods.createPasswordResetToken = async function () {
   const resetToken = crypto.randomBytes(32).toString("hex");
   this.passwordResetToken = crypto
     .createHash("sha256")
     .update(resetToken)
     .digest("hex");
-  this.passwordResetExpires = Date.now() + 30 * 60 * 1000;
+  this.passwordResetExpires = Date.now() + 10 * 60 * 1000;
   return resetToken;
 };
 

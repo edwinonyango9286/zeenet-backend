@@ -12,7 +12,6 @@ const sendEmail = require("../controllers/emailCtrl");
 const emailValidator = require("email-validator");
 const validatePassword = require("../utils/validatePassword");
 const redis = require("../utils/redis");
-const { json } = require("body-parser");
 
 const createUser = expressAsyncHandler(async (req, res) => {
   const { firstname, lastname, email, phone, password } = req.body;
@@ -58,6 +57,7 @@ const loginUser = expressAsyncHandler(async (req, res) => {
     await user.save();
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
+      secure: true,
       maxAge: parseInt(process.env.REFRESH_TOKEN_MAX_AGE),
     });
     res.json({
@@ -207,8 +207,9 @@ const getAUser = expressAsyncHandler(async (req, res) => {
     return res.json(JSON.parse(cachedUser));
   }
   const user = await User.findById(id);
+
   if (!user) {
-    throw new Error("User not found.");
+    throw new Error("There is no account associated with this id.");
   }
   await redis.set(cacheKey, JSON.stringify(user), "EX", 300);
   res.json({
@@ -284,16 +285,14 @@ const updatePassword = expressAsyncHandler(async (req, res) => {
 const forgotPasswordToken = expressAsyncHandler(async (req, res) => {
   const { email } = req.body;
   if (!email) {
-    throw new Error("Please fill in all the required fields.");
+    throw new Error("Please provide your email.");
   }
   if (!emailValidator.validate(email)) {
     throw new Error("Please provide a valid email address.");
   }
   const user = await User.findOne({ email });
   if (!user)
-    throw new Error(
-      "We're having a problem sending you an email. Please try again later."
-    );
+    throw new Error("There is no account associated with this email. ");
   const token = await user.createPasswordResetToken();
   await user.save();
   const resetURL = `Hi, Please follow this link to reset your password. This link is valid 10 minutes from now. <a href='https://zeenet-frontstore.onrender.com/reset-password/${token}'>Click Here</>`;
@@ -316,10 +315,7 @@ const forgotPasswordAdminToken = expressAsyncHandler(async (req, res) => {
     throw new Error("Please provide a valid email address.");
   }
   const user = await User.findOne({ email });
-  if (!user)
-    throw new Error(
-      "We're having a problem sending you an email. Please try again later."
-    );
+  if (!user) throw new Error("There is no account associated with this email.");
 
   if (user.role !== "admin") {
     throw new Error(
@@ -348,7 +344,10 @@ const resetPassword = expressAsyncHandler(async (req, res) => {
     passwordResetToken: hashedToken,
     passwordResetExpires: { $gt: Date.now() },
   });
-  if (!user) throw new Error("Please initiate reset password process again.");
+  if (!user)
+    throw new Error(
+      "Something went wrong. Please try initiating the password reset process again."
+    );
   user.password = password;
   user.passwordResetToken = undefined;
   user.passwordResetExpires = undefined;
