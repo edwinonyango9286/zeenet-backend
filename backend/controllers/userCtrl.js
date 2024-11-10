@@ -66,7 +66,7 @@ const loginUser = expressAsyncHandler(async (req, res) => {
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: false,
-      sameSite: "none",
+      sameSite: "strict",
       maxAge: parseInt(process.env.REFRESH_TOKEN_MAX_AGE),
     });
     res.json({
@@ -110,7 +110,7 @@ const adminLogin = expressAsyncHandler(async (req, res) => {
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: false,
-      sameSite: "none",
+      sameSite: "strict",
       maxAge: parseInt(process.env.REFRESH_TOKEN_MAX_AGE),
     });
 
@@ -163,7 +163,7 @@ const logout = expressAsyncHandler(async (req, res) => {
     const user = await User.findOne({ refreshToken });
     if (!user) {
       res.clearCookie("refreshToken", {
-        sameSite: "none",
+        sameSite: "strict",
         httpOnly: true,
         secure: false,
       });
@@ -180,7 +180,7 @@ const logout = expressAsyncHandler(async (req, res) => {
     res.clearCookie("refreshToken", {
       httpOnly: true,
       secure: false,
-      sameSite: "none",
+      sameSite: "strict",
     });
     res.status(200).json({ message: "You have succefully logged out." });
   } catch (error) {
