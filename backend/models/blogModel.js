@@ -1,5 +1,8 @@
-const mongoose = require("mongoose"); 
-const { Schema, Types: { ObjectId } } = require("mongoose");
+const mongoose = require("mongoose");
+const {
+  Schema,
+  Types: { ObjectId },
+} = require("mongoose");
 
 const blogSchema = new mongoose.Schema(
   {
@@ -53,7 +56,10 @@ const blogSchema = new mongoose.Schema(
       default: "admin",
       trim: true,
     },
-    images: [],
+    images: {
+      type: [String],
+      required: true,
+    },
   },
   {
     toJSON: {

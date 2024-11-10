@@ -41,48 +41,54 @@ const getToken = expressAsyncHandler(async () => {
 });
 
 const stkPush = expressAsyncHandler(async (req, res) => {
-  const { phone, amount } = req.body;
-  const formattedPhone = phone.startsWith("254")
-    ? phone
-    : `254${phone.slice(1)}`;
-
   try {
-    if (!token) {
-      token = await getToken();
+    const { phone, amount } = req.body;
+    if (!phone || !amount) {
+      throw new Error("Please provide all the required fields.");
     }
+    const formattedPhone = phone.startsWith("254")
+      ? phone
+      : `254${phone.slice(1)}`;
 
-    const timestamp = generateTimestamp();
-    const password = generatePassword(
-      process.env.SHORTCODE,
-      process.env.PASSKEY,
-      timestamp
-    );
-
-    const response = await axios.post(
-      "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
-      {
-        BusinessShortCode: process.env.SHORTCODE,
-        Password: password,
-        Timestamp: timestamp,
-        TransactionType: "CustomerPayBillOnline",
-        Amount: amount,
-        PartyA: formattedPhone,
-        PartyB: process.env.SHORTCODE,
-        PhoneNumber: formattedPhone,
-        CallBackURL: process.env.CALLBACKURL,
-        AccountReference: "Test",
-        TransactionDesc: "Test",
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+    try {
+      if (!token) {
+        token = await getToken();
       }
-    );
+      const timestamp = generateTimestamp();
+      const password = generatePassword(
+        process.env.SHORTCODE,
+        process.env.PASSKEY,
+        timestamp
+      );
 
-    res.json(response.data);
+      const response = await axios.post(
+        "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
+        {
+          BusinessShortCode: process.env.SHORTCODE,
+          Password: password,
+          Timestamp: timestamp,
+          TransactionType: "CustomerPayBillOnline",
+          Amount: amount,
+          PartyA: formattedPhone,
+          PartyB: process.env.SHORTCODE,
+          PhoneNumber: formattedPhone,
+          CallBackURL: process.env.CALLBACKURL,
+          AccountReference: "Test",
+          TransactionDesc: "Test",
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      res.json(response.data);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    throw new Error(error);
   }
 });
 

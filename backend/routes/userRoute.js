@@ -35,7 +35,7 @@ router.post("/forgot-password-token", forgotPasswordToken);
 router.post("/forgot-password-admin-token", forgotPasswordAdminToken);
 router.put("/reset-password/:token", resetPassword);
 router.put("/update-password", authMiddleware, updatePassword);
-router.post("/login", loginUser);
+router.post("/signin", loginUser);
 router.post("/admin-login", adminLogin);
 router.post("/cart", authMiddleware, adddProductToCart);
 router.get("/getusercart", authMiddleware, getUserCart);
@@ -58,8 +58,8 @@ router.put(
   isAdmin,
   updateOrderStatus
 );
-router.get("/refresh", handleRefreshToken);
-router.get("/logout", logout);
+router.get("/refreshAccessToken", handleRefreshToken);
+router.put("/logout", logout);
 router.get("/wishlist", authMiddleware, getWishlist);
 router.get("/:id", authMiddleware, getAUser);
 router.delete("/delete/:id", authMiddleware, deleteAUser);
