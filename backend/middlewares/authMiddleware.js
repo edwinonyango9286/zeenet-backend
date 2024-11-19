@@ -8,7 +8,7 @@ const authMiddleware = asyncHandler(async (req, res, next) => {
     if (req?.headers?.authorization?.startsWith("Bearer")) {
       token = req.headers.authorization.split(" ")[1];
       if (!token) {
-        throw new Error("Please login to proceed."); //No refresh token in cookies so it must be that the user has not logged in or the refresh token has expired and therefore has been deleleted from cookies.
+        throw new Error("Please login to proceed.");
       }
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       const user = await User.findById(decoded?.id);

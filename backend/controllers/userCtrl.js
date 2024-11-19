@@ -3,7 +3,7 @@ const Cart = require("../models/cartModel");
 const Coupon = require("../models/couponModel");
 const Order = require("../models/orderModel");
 const expressAsyncHandler = require("express-async-handler");
-const { generateToken } = require("../config/jwtToken");
+const { generateAccessToken } = require("../config/accessToken");
 const validateMongodbId = require("../utils/validateMongodbId");
 const { generateRefreshToken } = require("../config/refreshToken");
 const crypto = require("crypto");
@@ -16,11 +16,9 @@ const redis = require("../utils/redis");
 const createUser = expressAsyncHandler(async (req, res) => {
   try {
     const { firstname, lastname, email, phone, password } = req.body;
-    //Input validation
     if (!firstname || !lastname || !email || !phone || !password) {
       throw new Error("Please fill in all the required fields.");
     }
-    // Validate phone number
     const phoneRegex = /^(\+?254|0)?(7\d{8})$/;
     if (!phoneRegex.test(phone)) {
       throw new Error("Please provide a valid phone number.");
@@ -45,7 +43,6 @@ const createUser = expressAsyncHandler(async (req, res) => {
 const loginUser = expressAsyncHandler(async (req, res) => {
   try {
     const { email, password } = req.body;
-    //Input validation
     if (!email || !password) {
       throw new Error("Please fill in all the required fields.");
     }
@@ -57,9 +54,10 @@ const loginUser = expressAsyncHandler(async (req, res) => {
     if (!user) {
       throw new Error("User not found.");
     }
-    if (!(await user.isPasswordMatched(password))) {
+    if (user && !(await user.isPasswordMatched(password))) {
       throw new Error("Wrong email or password.");
     }
+    const accessToken = generateAccessToken(user._id);
     const refreshToken = generateRefreshToken(user._id);
     user.refreshToken = refreshToken;
     await user.save();
@@ -70,13 +68,12 @@ const loginUser = expressAsyncHandler(async (req, res) => {
       maxAge: parseInt(process.env.REFRESH_TOKEN_MAX_AGE),
     });
     res.json({
-      _id: user._id,
       firstname: user.firstname,
       lastname: user.lastname,
       email: user.email,
       phone: user.phone,
       avatar: user.avatar,
-      token: generateToken(user._id),
+      token: accessToken,
     });
   } catch (error) {
     throw new Error(error);
@@ -104,6 +101,7 @@ const adminLogin = expressAsyncHandler(async (req, res) => {
     if (!(await user.isPasswordMatched(password))) {
       throw new Error("Wrong email or password.");
     }
+    const accessToken = generateAccessToken(user._id);
     const refreshToken = generateRefreshToken(user._id);
     user.refreshToken = refreshToken;
     await user.save();
@@ -113,15 +111,13 @@ const adminLogin = expressAsyncHandler(async (req, res) => {
       sameSite: "strict",
       maxAge: parseInt(process.env.REFRESH_TOKEN_MAX_AGE),
     });
-
     res.json({
-      _id: user._id,
       firstname: user.firstname,
       lastname: user.lastname,
       email: user.email,
       phone: user.phone,
       avatar: user.avatar,
-      token: generateToken(user._id),
+      token: accessToken,
     });
   } catch (error) {
     throw new Error(error);
@@ -145,7 +141,7 @@ const handleRefreshToken = expressAsyncHandler(async (req, res) => {
       if (err || user.id !== decoded.id) {
         throw new Error("Something is wrong with this refreshtoken...");
       }
-      const accessToken = generateToken(user._id);
+      const accessToken = generateAccessToken(user._id);
       res.json({ accessToken });
     });
   } catch (error) {
@@ -464,7 +460,7 @@ const resetPassword = expressAsyncHandler(async (req, res) => {
 const getWishlist = expressAsyncHandler(async (req, res) => {
   try {
     const { _id } = req.user;
-    if (!id) {
+    if (!_id) {
       throw new Error("Please provide a user Id.");
     }
     validateMongodbId(_id);

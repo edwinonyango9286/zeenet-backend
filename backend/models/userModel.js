@@ -80,11 +80,11 @@ const userSchema = new mongoose.Schema(
         ref: "Product",
       },
     ],
-
     refreshToken: {
       type: String,
       require: false,
       unique: true,
+      sparse: true, 
       trim: true,
     },
     passwordChangedAt: Date,
@@ -106,8 +106,6 @@ userSchema.pre("save", async function (next) {
 userSchema.methods.isPasswordMatched = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
-
-
 
 userSchema.methods.createPasswordResetToken = async function () {
   const resetToken = crypto.randomBytes(32).toString("hex");

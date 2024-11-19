@@ -60,7 +60,7 @@ router.put(
 );
 router.get("/refreshAccessToken", handleRefreshToken);
 router.put("/logout", logout);
-router.get("/wishlist", authMiddleware, getWishlist);
+router.get("/get-user-wishlist", authMiddleware, getWishlist);
 router.get("/:id", authMiddleware, getAUser);
 router.delete("/delete/:id", authMiddleware, deleteAUser);
 router.put("/update-user", authMiddleware, updateAUser);

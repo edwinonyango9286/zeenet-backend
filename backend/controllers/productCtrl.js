@@ -88,8 +88,17 @@ const deleteProduct = expressAsyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
     validateMongodbId(id);
-    const deleteProduct = await Product.findOneAndDelete({ _id: id });
-    res.json(deleteProduct);
+    const cacheKey = `product:${id}`;
+    const deletedProduct = await Product.findOneAndDelete({ _id: id });
+    if (!deletedProduct) {
+      throw new Error("Product not found.");
+    }
+    await redis.del(cacheKey);
+    const keys = await redis.keys("products:*");
+    for (const key of keys) {
+      await redis.del(key);
+    }
+    res.json(deletedProduct);
   } catch (error) {
     throw new Error(error);
   }
@@ -117,49 +126,36 @@ const getaProduct = expressAsyncHandler(async (req, res) => {
 
 const getallProducts = expressAsyncHandler(async (req, res) => {
   try {
-    // Filtering
     const queryObject = { ...req.query };
     const excludeFields = ["page", "sort", "limit", "offset", "fields"];
     excludeFields.forEach((el) => delete queryObject[el]);
     let queryStr = JSON.stringify(queryObject);
     queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
     let query = Product.find(JSON.parse(queryStr));
-    // sorting
     if (req.query.sort) {
       const sortBy = req.query.sort.split(",").join(" ");
       query = query.sort(sortBy);
     } else {
       query = query.sort("-createdAt");
     }
-    // Limiting fields
     if (req.query.fields) {
       const fields = req.query.fields.split(",").join(" ");
       query = query.select(fields);
     } else {
       query = query.select("-__v");
     }
-    // Pagination
     const limit = parseInt(req.query.limit, 20) || 20;
     const offset = parseInt(req.query.offset) || 0;
     query = query.skip(offset).limit(limit);
-
-    // Check if the products are cached
     const cacheKey = `products:${JSON.stringify(queryObject)}:${
       req.query.sort
     }:${req.query.fields}:${limit}:${offset}`;
     const cachedProducts = await redis.get(cacheKey);
     if (cachedProducts) {
-      // Return the cached products
       return res.json(JSON.parse(cachedProducts));
     }
-
-    // Retrieve the products from the database
     const products = await query;
-
-    // Cache the products for future requests
     await redis.set(cacheKey, JSON.stringify(products), "EX", 300);
-
-    // Return the products
     res.json(products);
   } catch (error) {
     throw new Error(error);
