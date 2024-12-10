@@ -15,7 +15,6 @@ const createProduct = expressAsyncHandler(async (req, res) => {
       brand,
       quantity,
       images,
-      screenSize,
       tags,
     } = req.body;
     //Input validation
@@ -27,7 +26,6 @@ const createProduct = expressAsyncHandler(async (req, res) => {
       !brand ||
       !quantity ||
       !images ||
-      !screenSize ||
       !tags
     ) {
       throw new Error("Please fill in all the required fields");
@@ -52,7 +50,6 @@ const updateProduct = expressAsyncHandler(async (req, res) => {
       brand,
       quantity,
       images,
-      screenSize,
       tags,
     } = req.body;
     //Input validation
@@ -64,7 +61,6 @@ const updateProduct = expressAsyncHandler(async (req, res) => {
       !brand ||
       !quantity ||
       !images ||
-      !screenSize ||
       !tags
     ) {
       throw new Error("Please fill in all the required fields");
@@ -88,14 +84,14 @@ const deleteProduct = expressAsyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
     validateMongodbId(id);
-    const cacheKey = `product:${id}`;
     const deletedProduct = await Product.findOneAndDelete({ _id: id });
     if (!deletedProduct) {
       throw new Error("Product not found.");
     }
+    const cacheKey = `product:${id}`;
     await redis.del(cacheKey);
-    const keys = await redis.keys("products:*");
-    for (const key of keys) {
+    const productsCacheKeys = await redis.keys("products:*");
+    for (const key of productsCacheKeys) {
       await redis.del(key);
     }
     res.json(deletedProduct);
@@ -117,7 +113,7 @@ const getaProduct = expressAsyncHandler(async (req, res) => {
     if (!product) {
       throw new Error("Product currently out of stock.");
     }
-    await redis.set(cacheKey, JSON.stringify(product), "EX", 300);
+    await redis.set(cacheKey, JSON.stringify(product), "EX", 3600);
     res.json(product);
   } catch (error) {
     throw new Error(error);
@@ -155,7 +151,7 @@ const getallProducts = expressAsyncHandler(async (req, res) => {
       return res.json(JSON.parse(cachedProducts));
     }
     const products = await query;
-    await redis.set(cacheKey, JSON.stringify(products), "EX", 300);
+    await redis.set(cacheKey, JSON.stringify(products), "EX", 3600);
     res.json(products);
   } catch (error) {
     throw new Error(error);
@@ -191,7 +187,7 @@ const addToWishlist = expressAsyncHandler(async (req, res) => {
       );
       const userWishlist = await User.findById(_id).populate("wishlist");
       const cacheKey = `user:${_id}:wishlist`;
-      await redis.set(cacheKey, JSON.stringify(userWishlist), "EX", 300);
+      await redis.set(cacheKey, JSON.stringify(userWishlist), "EX", 3600);
       res.json(userWishlist);
     } else {
       let user = await User.findByIdAndUpdate(
@@ -205,7 +201,7 @@ const addToWishlist = expressAsyncHandler(async (req, res) => {
       );
       const userWishlist = await User.findById(_id).populate("wishlist");
       const cacheKey = `user:${_id}:wishlist`;
-      await redis.set(cacheKey, JSON.stringify(userWishlist), "EX", 300);
+      await redis.set(cacheKey, JSON.stringify(userWishlist), "EX", 3600);
       res.json(userWishlist);
     }
   } catch (error) {

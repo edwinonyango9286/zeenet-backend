@@ -52,7 +52,9 @@ const loginUser = expressAsyncHandler(async (req, res) => {
     validatePassword(password);
     const user = await User.findOne({ email });
     if (!user) {
-      throw new Error("User not found.");
+      throw new Error(
+        "We couldn't find an account associated with this email address. Please check the email and try again."
+      );
     }
     if (user && !(await user.isPasswordMatched(password))) {
       throw new Error("Wrong email or password.");
@@ -262,7 +264,7 @@ const getAUser = expressAsyncHandler(async (req, res) => {
     if (!user) {
       throw new Error("There is no account associated with this id.");
     }
-    await redis.set(cacheKey, JSON.stringify(user), "EX", 300);
+    await redis.set(cacheKey, JSON.stringify(user), "EX", 3600);
     res.json({
       user,
     });
@@ -379,7 +381,9 @@ const forgotPasswordToken = expressAsyncHandler(async (req, res) => {
     }
     const user = await User.findOne({ email });
     if (!user)
-      throw new Error("There is no account associated with this email. ");
+      throw new Error(
+        "We couldn't find an account associated with this email address. Please check the email and try again."
+      );
     const token = await user.createPasswordResetToken();
     await user.save();
     const resetURL = `Hi, Please follow this link to reset your password. This link is valid 10 minutes from now. <a href='https://zeenet-frontstore.onrender.com/reset-password/${token}'>Click Here</>`;
@@ -470,7 +474,7 @@ const getWishlist = expressAsyncHandler(async (req, res) => {
       return res.json(JSON.parse(cachedWishlist));
     }
     const user = await User.findById(_id).populate("wishlist");
-    await redis.set(cacheKey, JSON.stringify(user), "EX", 300);
+    await redis.set(cacheKey, JSON.stringify(user), "EX", 3600);
     res.json(user);
   } catch (error) {
     throw new Error(error);
@@ -511,7 +515,7 @@ const getUserCart = expressAsyncHandler(async (req, res) => {
       return res.json(JSON.parse(cachedCart));
     }
     const cart = await Cart.find({ userId: _id }).populate("productId");
-    await redis.set(cacheKey, JSON.stringify(cart), "EX", 300);
+    await redis.set(cacheKey, JSON.stringify(cart), "EX", 3600);
     res.json(cart);
   } catch (error) {
     throw new Error(error);
@@ -622,7 +626,7 @@ const getAllOrders = expressAsyncHandler(async (req, res) => {
       return res.json(JSON.parse(cachedOrders));
     }
     const orders = await Order.find().populate("user");
-    await redis.set(cacheKey, JSON.stringify(orders), "EX", 300);
+    await redis.set(cacheKey, JSON.stringify(orders), "EX", 3600);
     res.json({ orders });
   } catch (error) {
     throw new Error(error);

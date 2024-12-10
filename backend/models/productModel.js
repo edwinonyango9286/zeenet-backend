@@ -16,7 +16,6 @@ const productSchema = new mongoose.Schema(
     slug: {
       type: String,
       required: true,
-      unique: true,
       trim: true,
     },
     description: {
@@ -50,31 +49,53 @@ const productSchema = new mongoose.Schema(
     },
     images: [
       {
-        public_id: String,
-        url: String,
+        public_id: {
+          type: String,
+          required: true,
+        },
+        url: {
+          type: String,
+          required: true,
+        },
       },
     ],
+
     screenSize: {
       type: Number,
-      required: true,
       trim: true,
     },
 
     tags: {
       type: String,
+      required: true,
       trim: true,
+      enum: ["Featured", "Popular", "Special"],
     },
 
     ratings: [
       {
-        star: Number,
-        comment: String,
-        postedby: {
+        star: {
+          type: Number,
+          required: function () {
+            return this.ratings && this.ratings.length > 0;
+          },
+        },
+        comment: {
+          type: String,
+          required: function () {
+            return this.ratings && this.ratings.length > 0;
+          },
+        },
+        postedBy: {
           type: ObjectId,
           ref: "User",
+          required: function () {
+            return this.ratings && this.ratings.length > 0;
+          },
         },
       },
     ],
+
     totalRating: {
       type: String,
       default: 4,
