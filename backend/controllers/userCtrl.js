@@ -414,9 +414,7 @@ const forgotPasswordAdminToken = expressAsyncHandler(async (req, res) => {
       throw new Error("There is no account associated with this email.");
 
     if (user.role !== "admin") {
-      throw new Error(
-        "We're having a problem sending you an email. Please try again later."
-      );
+      throw new Error("Not authorised.");
     }
     const token = await user.createPasswordResetToken();
     await user.save();

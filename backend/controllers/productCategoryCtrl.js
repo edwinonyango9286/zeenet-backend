@@ -4,8 +4,8 @@ const validateMongodbId = require("../utils/validateMongodbId");
 
 const createProductCategory = expressAsyncHandler(async (req, res) => {
   try {
-    const newProductCategory = await ProductCategory.create(req.body);
-    res.json(newProductCategory);
+    const createdProductCategory = await ProductCategory.create(req.body);
+    res.status(201).json(createdProductCategory);
   } catch (error) {
     throw new Error(error);
   }
