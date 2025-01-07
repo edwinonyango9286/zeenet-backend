@@ -4,12 +4,12 @@ const productCategorySchema = new mongoose.Schema(
   {
     title: {
       type: String,
-      required: [true, "Tittle is required"],
+      required: [true, "Title is required"],
       unique: true,
       index: true,
       trim: true,
-      minlength: [2, "Tittle must be atleast 2 characters long."],
-      maxlength: [32, "Tittle must be atmost 32 characters long."],
+      minlength: [2, "Title must be atleast 2 characters long."],
+      maxlength: [32, "Title must be atmost 32 characters long."],
       match: [
         /^[a-zA-Z0-9\s]+$/,
         "Title can only contain alphanumeric characters and spaces",

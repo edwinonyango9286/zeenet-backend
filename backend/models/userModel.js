@@ -9,37 +9,39 @@ const crypto = require("crypto");
 
 const userSchema = new mongoose.Schema(
   {
-    firstname: {
+    firstName: {
       type: String,
-      required: true,
-      minlength: 2,
-      maxlength: 32,
+      required: [true, "First name is required."],
+      minlength: [2, "First name must be atleast 2 characters long."],
+      maxlength: [32, "Last name must be atmost 32 characters long."],
       trim: true,
       index: true,
     },
-    lastname: {
+    lastName: {
       type: String,
-      required: true,
-      minlength: 2,
-      maxlength: 32,
+      required: [true, "Last name is required."],
+      minlength: [2, "Last name must be at least 2 characters long."],
+      maxlength: [32, "Last name must be at most 32 characters long."],
       trim: true,
       index: true,
     },
     email: {
       type: String,
-      required: true,
+      required: [true, "Email is required."],
       unique: true,
       lowercase: true,
-      minlength: 2,
-      maxlength: 32,
+      minlength: [2, "Email must be at least 2 characters long."],
+      maxlength: [32, "Email must be at most 32 characters long."],
       trim: true,
+      match: [/.+\@.+\..+/, "Please provide a valid email address"],
       index: true,
     },
-    phone: {
+    phoneNumber: {
       type: String,
-      required: true,
+      required: [true, "Phone number is required."],
       unique: true,
-      triem: true,
+      trim: true,
+      match: [/^\+?[1-9]\d{1,14}$/, "Please provide a valid phone number"], // E.164 format
       index: true,
     },
     avatar: {
@@ -50,9 +52,7 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: true,
-      minlength: 8,
-      maxlength: 200,
+      required: [true, "Password is required."],
       trim: true,
     },
     role: {
@@ -84,7 +84,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       require: false,
       unique: true,
-      sparse: true, 
+      sparse: true,
       trim: true,
     },
     passwordChangedAt: Date,
@@ -95,6 +95,7 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// pre-save hook to hash the password before saving it.
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) {
     return next();
@@ -103,10 +104,12 @@ userSchema.pre("save", async function (next) {
   this.password = await bcrypt.hash(this.password, salt);
 });
 
+// Method to check if the entered password matches the hashed password.
 userSchema.methods.isPasswordMatched = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
+// Method to generate a password reset token.
 userSchema.methods.createPasswordResetToken = async function () {
   const resetToken = crypto.randomBytes(32).toString("hex");
   this.passwordResetToken = crypto

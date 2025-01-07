@@ -3,23 +3,26 @@ const mongoose = require("mongoose");
 const enquirySchema = new mongoose.Schema({
   name: {
     type: String,
-    required: true,
+    required: [true, "Enquiry Name is required."],
     trim: true,
-    minlength: 2,
-    maxlength: 64,
+    minlength: [2, "Enquiry name  must be atleast 2 characters long."],
+    maxlength: [32, "Enquiry name must be atmost 32 characters long."],
+    index: true,
   },
   email: {
     type: String,
-    required: true,
+    required: [true, "Email is required."],
     lowercase: true,
-    minlength: 2,
-    maxlength: 32,
+    minlength: [2, "Email must be atleast 2 characters long."],
+    maxlength: [32, "Email must be atmost 32 characters long."],
     trim: true,
+    match: [/.+\@.+\..+/, "Please provide a valid email address"],
   },
-  phone: {
+  phoneNumber: {
     type: String,
-    required: true,
+    required: [true, "Phone Number is required."],
     trim: true,
+    match: [/^\+?[1-9]\d{1,14}$/, "Please provide a valid phone number."],
   },
   enquiry: {
     type: String,

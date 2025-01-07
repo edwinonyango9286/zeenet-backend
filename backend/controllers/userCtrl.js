@@ -13,14 +13,16 @@ const emailValidator = require("email-validator");
 const validatePassword = require("../utils/validatePassword");
 const redis = require("../utils/redis");
 
-const createUser = expressAsyncHandler(async (req, res) => {
+// Register a new user.
+const registerUser = expressAsyncHandler(async (req, res) => {
   try {
-    const { firstname, lastname, email, phone, password } = req.body;
-    if (!firstname || !lastname || !email || !phone || !password) {
+    const { firstName, lastName, email, phoneNumber, password } = req.body;
+
+    if (!firstName || !lastName || !email || !phoneNumber || !password) {
       throw new Error("Please fill in all the required fields.");
     }
-    const phoneRegex = /^(\+?254|0)?(7\d{8})$/;
-    if (!phoneRegex.test(phone)) {
+    const phoneRegex = /^\+?[1-9]\d{1,14}$/;
+    if (!phoneRegex.test(phoneNumber)) {
       throw new Error("Please provide a valid phone number.");
     }
     validatePassword(password);
@@ -33,14 +35,16 @@ const createUser = expressAsyncHandler(async (req, res) => {
         "This email address is already associated with an account. If this account is yours, you can reset your password"
       );
     }
+
     const createdUser = await User.create(req.body);
-    res.json(createdUser);
+    res.status(200).json(createdUser);
   } catch (error) {
     throw new Error(error);
   }
 });
 
-const loginUser = expressAsyncHandler(async (req, res) => {
+// login user
+const siginUser = expressAsyncHandler(async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
@@ -69,12 +73,10 @@ const loginUser = expressAsyncHandler(async (req, res) => {
       sameSite: "strict",
       maxAge: parseInt(process.env.REFRESH_TOKEN_MAX_AGE),
     });
-    res.json({
-      firstname: user.firstname,
-      lastname: user.lastname,
-      email: user.email,
-      phone: user.phone,
-      avatar: user.avatar,
+    res.status(200).json({
+      firstname: user?.firstName,
+      email: user?.email,
+      avatar: user?.avatar,
       token: accessToken,
     });
   } catch (error) {
@@ -82,10 +84,10 @@ const loginUser = expressAsyncHandler(async (req, res) => {
   }
 });
 
-const adminLogin = expressAsyncHandler(async (req, res) => {
+//Sign in admin
+const adminSignin = expressAsyncHandler(async (req, res) => {
   try {
     const { email, password } = req.body;
-    //Input validation
     if (!email || !password) {
       throw new Error("Please fill in all the required fields.");
     }
@@ -113,11 +115,9 @@ const adminLogin = expressAsyncHandler(async (req, res) => {
       sameSite: "strict",
       maxAge: parseInt(process.env.REFRESH_TOKEN_MAX_AGE),
     });
-    res.json({
-      firstname: user.firstname,
-      lastname: user.lastname,
+    res.status(200).json({
+      firstName: user.firstName,
       email: user.email,
-      phone: user.phone,
       avatar: user.avatar,
       token: accessToken,
     });
@@ -144,7 +144,7 @@ const handleRefreshToken = expressAsyncHandler(async (req, res) => {
         throw new Error("Something is wrong with this refreshtoken...");
       }
       const accessToken = generateAccessToken(user._id);
-      res.json({ accessToken });
+      res.status(200).json({ accessToken });
     });
   } catch (error) {
     throw new Error(error);
@@ -166,7 +166,7 @@ const logout = expressAsyncHandler(async (req, res) => {
         secure: false,
       });
       return res
-        .sendStatus(200)
+        .status(204)
         .json({ message: "You have sucessfully logged out." });
     }
     await User.findOneAndUpdate(
@@ -180,7 +180,7 @@ const logout = expressAsyncHandler(async (req, res) => {
       secure: false,
       sameSite: "strict",
     });
-    res.status(200).json({ message: "You have succefully logged out." });
+    res.status(204).json({ message: "You have succefully logged out." });
   } catch (error) {
     throw new Error(error);
   }
@@ -189,28 +189,25 @@ const logout = expressAsyncHandler(async (req, res) => {
 const updateAUser = expressAsyncHandler(async (req, res) => {
   try {
     const { _id } = req.user;
-    if (!_id) {
-      throw new Error("Please provide  user id.");
-    }
     validateMongodbId(_id);
-    const { firstname, lastname, email, phone } = req.body;
-    if (!firstname || !lastname || !email || !phone) {
+    const { firstName, lastName, email, phoneNumber } = req.body;
+    if (!firstName || !lastName || !email || !phoneNumber) {
       throw new Error("Please fill in all the required fields.");
     }
     if (!emailValidator.validate(email)) {
       throw new Error("Please provide a valid email address.");
     }
     const phoneRegex = /^(\+?254|0)?(7\d{8})$/;
-    if (!phoneRegex.test(phone)) {
+    if (!phoneRegex.test(phoneNumber)) {
       throw new Error("Please provide a valid phone number.");
     }
     const updatedUser = await User.findByIdAndUpdate(
       _id,
       {
-        firstname: firstname,
-        lastname: lastname,
+        firstName: firstName,
+        lastName: lastName,
         email: email,
-        phone: phone,
+        phoneNumber: phoneNumber,
       },
       {
         new: true,
@@ -227,9 +224,6 @@ const updateAUser = expressAsyncHandler(async (req, res) => {
 const saveUserAddress = expressAsyncHandler(async (req, res) => {
   try {
     const { _id } = req.user;
-    if (!_id) {
-      throw new Error("Please provide user Id.");
-    }
     validateMongodbId(_id);
     const { address } = req.body;
     if (!address) {
@@ -251,9 +245,6 @@ const saveUserAddress = expressAsyncHandler(async (req, res) => {
 const getAUser = expressAsyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    if (!id) {
-      throw new Error("Please provide user Id");
-    }
     validateMongodbId(id);
     const cacheKey = `user:${id}`;
     const cachedUser = await redis.get(cacheKey);
@@ -262,7 +253,7 @@ const getAUser = expressAsyncHandler(async (req, res) => {
     }
     const user = await User.findById(id);
     if (!user) {
-      throw new Error("There is no account associated with this id.");
+      throw new Error("User not found.");
     }
     await redis.set(cacheKey, JSON.stringify(user), "EX", 3600);
     res.json({
@@ -285,14 +276,12 @@ const getAllUsers = expressAsyncHandler(async (req, res) => {
 const deleteAUser = expressAsyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    if (!id) {
-      throw new Error("Please provide a user Id.");
-    }
     validateMongodbId(id);
     const deletedUsers = await User.findByIdAndDelete(id);
-    res.json({
-      deletedUsers,
-    });
+    if (!deletedUsers) {
+      throw new Error("User not found");
+    }
+    res.status(200).json({ message: "User deleted succesfully", deletedUsers });
   } catch (error) {
     throw new Error(error);
   }
@@ -324,9 +313,6 @@ const blockUser = expressAsyncHandler(async (req, res) => {
 const unBlockUser = expressAsyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    if (!id) {
-      throw new Error("Please provide a user Id.");
-    }
     validateMongodbId(id);
     const unblockedUser = await User.findByIdAndUpdate(
       id,
@@ -347,9 +333,6 @@ const unBlockUser = expressAsyncHandler(async (req, res) => {
 const updatePassword = expressAsyncHandler(async (req, res) => {
   try {
     const { _id } = req.user;
-    if (!id) {
-      throw new Error("Please provide a user Id.");
-    }
     const { password, confirmPassword } = req.body;
     if (!password || !confirmPassword) {
       throw new Error("Please fill in all the required fields.");
@@ -462,9 +445,6 @@ const resetPassword = expressAsyncHandler(async (req, res) => {
 const getWishlist = expressAsyncHandler(async (req, res) => {
   try {
     const { _id } = req.user;
-    if (!_id) {
-      throw new Error("Please provide a user Id.");
-    }
     validateMongodbId(_id);
     const cacheKey = `user:${_id}:wishlist`;
     const cachedWishlist = await redis.get(cacheKey);
@@ -527,9 +507,6 @@ const applyCoupon = expressAsyncHandler(async (req, res) => {
       throw new Error("Please provide a user Id.");
     }
     const { _id } = req.user;
-    if (!_id) {
-      throw new Error("Please provide a user Id.");
-    }
     validateMongodbId(_id);
     const validCoupon = await Coupon.findOne({ name: coupon });
     if (validCoupon === null) {
@@ -598,9 +575,6 @@ const createOrder = expressAsyncHandler(async (req, res) => {
 const getMyOrders = expressAsyncHandler(async (req, res) => {
   try {
     const { _id } = req.user;
-    if (!_id) {
-      throw new Error("Please provide a user Id.");
-    }
     const cacheKey = `order:${_id}`;
     const cachedOrder = await redis.get(cacheKey);
     if (cachedOrder) {
@@ -757,8 +731,8 @@ const getYearlyOrders = expressAsyncHandler(async (req, res) => {
 });
 
 module.exports = {
-  createUser,
-  loginUser,
+  registerUser,
+  siginUser,
   getAllUsers,
   getAUser,
   deleteAUser,
@@ -770,7 +744,7 @@ module.exports = {
   updatePassword,
   forgotPasswordToken,
   resetPassword,
-  adminLogin,
+  adminSignin,
   getWishlist,
   saveUserAddress,
   adddProductToCart,

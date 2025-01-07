@@ -34,7 +34,7 @@ const createProduct = expressAsyncHandler(async (req, res) => {
       req.body.slug = slugify(title);
     }
     const newProduct = await Product.create(req.body);
-    res.json(newProduct);
+    res.status(201).json(newProduct);
   } catch (error) {
     throw new Error(error);
   }
@@ -74,7 +74,10 @@ const updateProduct = expressAsyncHandler(async (req, res) => {
     const updatedProduct = await Product.findByIdAndUpdate(id, req.body, {
       new: true,
     });
-    res.json(updatedProduct);
+    if (!updateProduct) {
+      throw new Error("Product not found.");
+    }
+    res.status(200).json(updatedProduct);
   } catch (error) {
     throw new Error(error);
   }
@@ -94,7 +97,8 @@ const deleteProduct = expressAsyncHandler(async (req, res) => {
     for (const key of productsCacheKeys) {
       await redis.del(key);
     }
-    res.json(deletedProduct);
+
+    res.status(200).json(deletedProduct);
   } catch (error) {
     throw new Error(error);
   }
@@ -120,39 +124,79 @@ const getaProduct = expressAsyncHandler(async (req, res) => {
   }
 });
 
+// const getallProducts = expressAsyncHandler(async (req, res) => {
+//   try {
+//     const queryObject = { ...req.query };
+//     const excludeFields = ["page", "sort", "limit", "offset", "fields"];
+//     excludeFields.forEach((el) => delete queryObject[el]);
+
+//     // Log the queryObject after excluding fields
+//     console.log("Query Object:", queryObject);
+
+//     let queryStr = JSON.stringify(queryObject);
+//     queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
+
+//     // Log the queryStr after replacing operators
+//     console.log("Query String:", queryStr);
+
+//     let query = Product.find(JSON.parse(queryStr));
+
+//     // Sorting
+//     if (req.query.sort) {
+//       const sortBy = req.query.sort.split(",").join(" ");
+//       query = query.sort(sortBy);
+//     } else {
+//       query = query.sort("-createdAt");
+//     }
+
+//     // Field limiting
+//     if (req.query.fields) {
+//       const fields = req.query.fields.split(",").join(" ");
+//       query = query.select(fields);
+//     } else {
+//       query = query.select("-__v");
+//     }
+
+//     // Pagination
+//     const limit = parseInt(req.query.limit, 10) || 20;
+//     const offset = parseInt(req.query.offset, 10) || 0;
+//     query = query.skip(offset).limit(limit);
+
+//     // Log the final query
+//     console.log("Final Query:", query);
+
+//     // Caching
+//     const cacheKey = `products:${JSON.stringify(queryObject)}:${
+//       req.query.sort
+//     }:${req.query.fields}:${limit}:${offset}`;
+//     const cachedProducts = await redis.get(cacheKey);
+
+//     if (cachedProducts) {
+//       console.log("Returning cached products");
+//       return res.status(200).json(JSON.parse(cachedProducts));
+//     }
+
+//     // Execute query
+//     const products = await query;
+
+//     // Log the fetched products
+//     console.log("Fetched Products:", products);
+
+//     await redis.set(cacheKey, JSON.stringify(products), "EX", 3600);
+//     res.status(200).json(products);
+//   } catch (error) {
+//     console.error("Error fetching products:", error);
+//     res.status(500).json({ message: "Error fetching products" });
+//   }
+// });
+
 const getallProducts = expressAsyncHandler(async (req, res) => {
   try {
-    const queryObject = { ...req.query };
-    const excludeFields = ["page", "sort", "limit", "offset", "fields"];
-    excludeFields.forEach((el) => delete queryObject[el]);
-    let queryStr = JSON.stringify(queryObject);
-    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
-    let query = Product.find(JSON.parse(queryStr));
-    if (req.query.sort) {
-      const sortBy = req.query.sort.split(",").join(" ");
-      query = query.sort(sortBy);
-    } else {
-      query = query.sort("-createdAt");
-    }
-    if (req.query.fields) {
-      const fields = req.query.fields.split(",").join(" ");
-      query = query.select(fields);
-    } else {
-      query = query.select("-__v");
-    }
-    const limit = parseInt(req.query.limit, 20) || 20;
-    const offset = parseInt(req.query.offset) || 0;
-    query = query.skip(offset).limit(limit);
-    const cacheKey = `products:${JSON.stringify(queryObject)}:${
-      req.query.sort
-    }:${req.query.fields}:${limit}:${offset}`;
-    const cachedProducts = await redis.get(cacheKey);
-    if (cachedProducts) {
-      return res.json(JSON.parse(cachedProducts));
-    }
-    const products = await query;
-    await redis.set(cacheKey, JSON.stringify(products), "EX", 3600);
-    res.json(products);
+    const products = await Product.find()
+      .populate("category") 
+      .populate("brand"); 
+
+    res.status(200).json(products);
   } catch (error) {
     throw new Error(error);
   }
@@ -202,7 +246,8 @@ const addToWishlist = expressAsyncHandler(async (req, res) => {
       const userWishlist = await User.findById(_id).populate("wishlist");
       const cacheKey = `user:${_id}:wishlist`;
       await redis.set(cacheKey, JSON.stringify(userWishlist), "EX", 3600);
-      res.json(userWishlist);
+
+      res.status(200).json(userWishlist);
     }
   } catch (error) {
     throw new Error(error);
@@ -216,7 +261,7 @@ const rating = expressAsyncHandler(async (req, res) => {
     validateMongodbId(_id);
     validateMongodbId(prodId);
     if (!star || !comment) {
-      throw new Error("Please provide rating and comment for this product.");
+      throw new Error("Please provide a rating and comment for this product.");
     }
     const product = await Product.findById(prodId);
     let alreadyRated = product.ratings.find(
@@ -261,7 +306,7 @@ const rating = expressAsyncHandler(async (req, res) => {
         new: true,
       }
     );
-    res.json(finalproduct);
+    res.status(200).json(finalproduct);
   } catch (error) {
     throw new Error(error);
   }
