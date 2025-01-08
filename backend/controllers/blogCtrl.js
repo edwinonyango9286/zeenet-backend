@@ -11,7 +11,7 @@ const createBlog = expressAsyncHandler(async (req, res) => {
       throw new Error("Please provide all the required fields.");
     }
     const newBlog = await Blog.create(req.body);
-    res.json(newBlog);
+    res.status(201).json(newBlog);
   } catch (error) {
     throw new Error(error);
   }
@@ -24,14 +24,11 @@ const updateBlog = expressAsyncHandler(async (req, res) => {
       throw new Error("Please provide all the required fields.");
     }
     const { id } = req.params;
-    if (!id) {
-      throw new Error("Please provide blog Id.");
-    }
     validateMongodbId(id);
     const updatedBlog = await Blog.findByIdAndUpdate(id, req.body, {
       new: true,
     });
-    res.json(updatedBlog);
+    res.status(200).json(updatedBlog);
   } catch (error) {
     throw new Error(error);
   }
@@ -40,9 +37,6 @@ const updateBlog = expressAsyncHandler(async (req, res) => {
 const getBlog = expressAsyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    if (!id) {
-      throw new Error("Please provide a blog Id");
-    }
     validateMongodbId(id);
     const getBlog = await Blog.findById(id)
       .populate("likes")
@@ -53,7 +47,7 @@ const getBlog = expressAsyncHandler(async (req, res) => {
       { $inc: { numViews: 1 } },
       { new: true }
     );
-    res.json(getBlog);
+    res.status(200).json(getBlog);
   } catch (error) {
     throw new Error(error);
   }
@@ -62,7 +56,7 @@ const getBlog = expressAsyncHandler(async (req, res) => {
 const getAllBlogs = expressAsyncHandler(async (req, res) => {
   try {
     const getBlogs = await Blog.find();
-    res.json(getBlogs);
+    res.status(200).json(getBlogs);
   } catch (error) {
     throw new Error(error);
   }
@@ -71,12 +65,12 @@ const getAllBlogs = expressAsyncHandler(async (req, res) => {
 const deleteBlog = expressAsyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    if (!id) {
-      throw new Error("Please provide a blog Id");
-    }
     validateMongodbId(id);
     const deletedBlog = await Blog.findByIdAndDelete(id);
-    res.json(deletedBlog);
+    if (!deletedBlog) {
+      throw new Error("Blog not found.");
+    }
+    res.status(200).json(deletedBlog);
   } catch (error) {
     throw new Error(error);
   }
@@ -188,9 +182,6 @@ const dislikeTheBlog = expressAsyncHandler(async (req, res) => {
 const uploadBlogImages = expressAsyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    if (!id) {
-      throw new Error("Please provide a id");
-    }
     validateMongodbId(id);
     const uploader = (path) => cloudinaryUploadingImg(path, "images");
     const urls = [];

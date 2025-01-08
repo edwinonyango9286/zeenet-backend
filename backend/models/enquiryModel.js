@@ -27,8 +27,8 @@ const enquirySchema = new mongoose.Schema({
   enquiry: {
     type: String,
     required: true,
-    minlength: 2,
-    maxlength: 500,
+    minlength: [2, "Enquiry must be atleast 2 characters long."],
+    maxlength: [500, "Enquiry must be atmost 500 characters long."],
     trim: true,
   },
   status: {

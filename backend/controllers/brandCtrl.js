@@ -4,6 +4,10 @@ const validateMongodbId = require("../utils/validateMongodbId");
 
 const createBrand = expressAsyncHandler(async (req, res) => {
   try {
+    const { title } = req.body;
+    if (!title) {
+      throw new Error("Please provide all the required fields");
+    }
     const newBrand = await Brand.create(req.body);
     res.status(201).json(newBrand);
   } catch (error) {
@@ -13,6 +17,10 @@ const createBrand = expressAsyncHandler(async (req, res) => {
 
 const updateBrand = expressAsyncHandler(async (req, res) => {
   try {
+    const { title } = req.body;
+    if (!title) {
+      throw new Error("Please provide all the required fields.");
+    }
     const { id } = req.params;
     validateMongodbId(id);
     const updatedBrand = await Brand.findByIdAndUpdate(id, req.body, {

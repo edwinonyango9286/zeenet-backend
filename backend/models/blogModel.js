@@ -30,6 +30,7 @@ const blogSchema = new mongoose.Schema(
       type: ObjectId,
       required: [true, "Category is required."],
       ref: "BlogCategory",
+      trim: true,
     },
     numViews: {
       type: Number,
@@ -47,12 +48,14 @@ const blogSchema = new mongoose.Schema(
       {
         type: ObjectId,
         ref: "User",
+        trim: true,
       },
     ],
     dislikes: [
       {
         type: ObjectId,
         ref: "User",
+        trim: true,
       },
     ],
     author: {

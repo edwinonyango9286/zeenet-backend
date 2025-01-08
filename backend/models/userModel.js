@@ -69,15 +69,18 @@ const userSchema = new mongoose.Schema(
       type: Array,
       default: [],
     },
-    address: {
-      type: String,
-      default: null,
-      trim: true,
-    },
+    deliveryAddress: [
+      {
+        type: ObjectId,
+        ref: "DeliveryAddress",
+        trim: true,
+      },
+    ],
     wishlist: [
       {
         type: ObjectId,
         ref: "Product",
+        trim: true,
       },
     ],
     refreshToken: {

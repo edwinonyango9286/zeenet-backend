@@ -40,11 +40,13 @@ const productSchema = new mongoose.Schema(
       type: ObjectId,
       required: [true, "Category is required."],
       ref: "ProductCategory",
+      trim: true,
     },
     brand: {
       type: ObjectId,
       required: [true, "Brand is required."],
       ref: "Brand",
+      trim: true,
     },
     quantity: {
       type: Number,
@@ -56,6 +58,13 @@ const productSchema = new mongoose.Schema(
       default: 0,
       min: [0, "Sold quantity cannot be negative."],
     },
+
+    screenSize: {
+      type: Number,
+      trim: true,
+      min: [0, "Screen size can not be negative."],
+    },
+
     images: {
       type: [
         {
@@ -78,14 +87,9 @@ const productSchema = new mongoose.Schema(
       },
     },
 
-    screenSize: {
-      type: Number,
-      trim: true,
-    },
-
     tags: {
       type: String,
-      required: true,
+      required: [true, "Tags is required."],
       trim: true,
       enum: ["Featured", "Popular", "Special"],
       index: true,
@@ -108,6 +112,7 @@ const productSchema = new mongoose.Schema(
         postedBy: {
           type: ObjectId,
           ref: "User",
+          trim: true,
           required: function () {
             return this.ratings && this.ratings.length > 0;
           },

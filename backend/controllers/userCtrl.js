@@ -35,7 +35,6 @@ const registerUser = expressAsyncHandler(async (req, res) => {
         "This email address is already associated with an account. If this account is yours, you can reset your password"
       );
     }
-
     const createdUser = await User.create(req.body);
     res.status(200).json(createdUser);
   } catch (error) {
@@ -213,30 +212,12 @@ const updateAUser = expressAsyncHandler(async (req, res) => {
         new: true,
       }
     );
-    res.json({
+    if (!updatedUser) {
+      throw new Error("User not found.");
+    }
+    res.status(200).json({
       updatedUser,
     });
-  } catch (error) {
-    throw new Error(error);
-  }
-});
-
-const saveUserAddress = expressAsyncHandler(async (req, res) => {
-  try {
-    const { _id } = req.user;
-    validateMongodbId(_id);
-    const { address } = req.body;
-    if (!address) {
-      throw new Error("Please provide an address.");
-    }
-    const updatedUser = await User.findByIdAndUpdate(
-      _id,
-      { address: address },
-      {
-        new: true,
-      }
-    );
-    res.json(updatedUser);
   } catch (error) {
     throw new Error(error);
   }
@@ -249,14 +230,14 @@ const getAUser = expressAsyncHandler(async (req, res) => {
     const cacheKey = `user:${id}`;
     const cachedUser = await redis.get(cacheKey);
     if (cachedUser) {
-      return res.json(JSON.parse(cachedUser));
+      return res.status(200).json(JSON.parse(cachedUser));
     }
     const user = await User.findById(id);
     if (!user) {
       throw new Error("User not found.");
     }
-    await redis.set(cacheKey, JSON.stringify(user), "EX", 3600);
-    res.json({
+    await redis.set(cacheKey, JSON.stringify(user), "EX",1);
+    res.status(200).json({
       user,
     });
   } catch (error) {
@@ -267,7 +248,7 @@ const getAUser = expressAsyncHandler(async (req, res) => {
 const getAllUsers = expressAsyncHandler(async (req, res) => {
   try {
     const users = await User.find();
-    res.json(users);
+    res.status(200).json(users);
   } catch (error) {
     throw new Error(error);
   }
@@ -290,9 +271,6 @@ const deleteAUser = expressAsyncHandler(async (req, res) => {
 const blockUser = expressAsyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    if (!id) {
-      throw new Error("Please provide a user Id.");
-    }
     validateMongodbId(id);
     const blockedUser = await User.findByIdAndUpdate(
       id,
@@ -301,7 +279,11 @@ const blockUser = expressAsyncHandler(async (req, res) => {
       },
       { new: true }
     );
-    res.json({
+
+    if (!blockedUser) {
+      throw new Error("user not found.");
+    }
+    res.status(200).json({
       blockedUser,
       message: "User is blocked and can not make purchases.",
     });
@@ -321,7 +303,10 @@ const unBlockUser = expressAsyncHandler(async (req, res) => {
       },
       { new: true }
     );
-    res.json({
+    if (!unblockedUser) {
+      throw new Error("User not found.");
+    }
+    res.status(204).json({
       unblockedUser,
       message: "User has been unblocked and can now make purchases.",
     });
@@ -341,12 +326,15 @@ const updatePassword = expressAsyncHandler(async (req, res) => {
     validatePassword(password);
     validatePassword(confirmPassword);
     const user = await User.findById(_id);
+    if (!user) {
+      throw new Error("User not found.");
+    }
     if (password) {
       user.password = password;
       const updatedPassword = await user.save();
-      res.json(updatedPassword);
+      res.status(200).json(updatedPassword);
     } else {
-      res.json(user);
+      res.status(200).json(user);
     }
   } catch (error) {
     throw new Error(error);
@@ -377,7 +365,7 @@ const forgotPasswordToken = expressAsyncHandler(async (req, res) => {
       html: resetURL,
     };
     sendEmail(data);
-    res.json(token);
+    res.status(200).json(token);
   } catch (error) {
     throw new Error(error);
   }
@@ -409,7 +397,7 @@ const forgotPasswordAdminToken = expressAsyncHandler(async (req, res) => {
       html: resetURL,
     };
     sendEmail(data);
-    res.json(token);
+    res.status(200).json(token);
   } catch (error) {
     throw new Error(error);
   }
@@ -436,7 +424,7 @@ const resetPassword = expressAsyncHandler(async (req, res) => {
     user.passwordResetToken = undefined;
     user.passwordResetExpires = undefined;
     await user.save();
-    res.json(user);
+    res.status(200).json(user);
   } catch (error) {
     throw new Error(error);
   }
@@ -449,11 +437,11 @@ const getWishlist = expressAsyncHandler(async (req, res) => {
     const cacheKey = `user:${_id}:wishlist`;
     const cachedWishlist = await redis.get(cacheKey);
     if (cachedWishlist) {
-      return res.json(JSON.parse(cachedWishlist));
+      return res.status(200).json(JSON.parse(cachedWishlist));
     }
     const user = await User.findById(_id).populate("wishlist");
-    await redis.set(cacheKey, JSON.stringify(user), "EX", 3600);
-    res.json(user);
+    await redis.set(cacheKey, JSON.stringify(user), "EX",1);
+    res.status(200).json(user);
   } catch (error) {
     throw new Error(error);
   }
@@ -462,7 +450,6 @@ const getWishlist = expressAsyncHandler(async (req, res) => {
 const adddProductToCart = expressAsyncHandler(async (req, res) => {
   try {
     const { productId, quantity, price } = req.body;
-    //  Input validation
     if (!productId || !quantity || !price) {
       throw new Error("Please provide all the required fileds.");
     }
@@ -474,7 +461,7 @@ const adddProductToCart = expressAsyncHandler(async (req, res) => {
       quantity,
       price,
     }).save();
-    res.json(newCart);
+    res.status(200).json(newCart);
   } catch (error) {
     throw new Error(error);
   }
@@ -490,11 +477,11 @@ const getUserCart = expressAsyncHandler(async (req, res) => {
     const cacheKey = `cart:${_id}`;
     const cachedCart = await redis.get(cacheKey);
     if (cachedCart) {
-      return res.json(JSON.parse(cachedCart));
+      return res.status(200).json(JSON.parse(cachedCart));
     }
     const cart = await Cart.find({ userId: _id }).populate("productId");
-    await redis.set(cacheKey, JSON.stringify(cart), "EX", 3600);
-    res.json(cart);
+    await redis.set(cacheKey, JSON.stringify(cart), "EX", 1);
+    res.status(200).json(cart);
   } catch (error) {
     throw new Error(error);
   }
@@ -525,7 +512,7 @@ const applyCoupon = expressAsyncHandler(async (req, res) => {
       { totalAfterDiscount },
       { new: true }
     );
-    res.json(totalAfterDiscount);
+    res.status.json(totalAfterDiscount);
   } catch (error) {
     throw new Error(error);
   }
@@ -552,7 +539,6 @@ const createOrder = expressAsyncHandler(async (req, res) => {
         "Please verify that you have provided all the order related information."
       );
     }
-
     const { _id } = req.user;
     validateMongodbId(_id);
     const order = await Order.create({
@@ -563,7 +549,7 @@ const createOrder = expressAsyncHandler(async (req, res) => {
       paymentInfo,
       user: _id,
     });
-    res.json({
+    res.status.json({
       order,
       success: true,
     });
@@ -572,19 +558,19 @@ const createOrder = expressAsyncHandler(async (req, res) => {
   }
 });
 
-const getMyOrders = expressAsyncHandler(async (req, res) => {
+const getUserOrders = expressAsyncHandler(async (req, res) => {
   try {
     const { _id } = req.user;
     const cacheKey = `order:${_id}`;
     const cachedOrder = await redis.get(cacheKey);
     if (cachedOrder) {
-      return res.json(JSON.parse(cachedOrder));
+      return res.status(200).json(JSON.parse(cachedOrder));
     }
     const orders = await Order.find({ user: _id })
       .populate("user")
       .populate("orderedItems.product");
     await redis.set(cacheKey, JSON.stringify(orders));
-    res.json({ orders });
+    res.status(200).json({ orders });
   } catch (error) {
     throw new Error(error);
   }
@@ -595,11 +581,11 @@ const getAllOrders = expressAsyncHandler(async (req, res) => {
     const cacheKey = "orders";
     const cachedOrders = await redis.get(cacheKey);
     if (cachedOrders) {
-      return res.json(JSON.parse(cachedOrders));
+      return res.status(200).json(JSON.parse(cachedOrders));
     }
     const orders = await Order.find().populate("user");
-    await redis.set(cacheKey, JSON.stringify(orders), "EX", 3600);
-    res.json({ orders });
+    await redis.set(cacheKey, JSON.stringify(orders), "EX",1);
+    res.status(200).json({ orders });
   } catch (error) {
     throw new Error(error);
   }
@@ -608,15 +594,14 @@ const getAllOrders = expressAsyncHandler(async (req, res) => {
 const getASingleOrder = expressAsyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    if (id) {
-      throw new Error("Please provide a user Id.");
-    }
     validateMongodbId(id);
-
     const order = await Order.findOne({ _id: id }).populate(
       "orderedItems.product"
     );
-    res.json({ order });
+    if (!order) {
+      throw new Error("Order not found.");
+    }
+    res.status(200).json({ order });
   } catch (error) {
     throw new Error(error);
   }
@@ -625,18 +610,18 @@ const getASingleOrder = expressAsyncHandler(async (req, res) => {
 const updateOrderStatus = expressAsyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    if (!id) {
-      throw new Error("Please provide a user Id.");
-    }
     validateMongodbId(id);
     const order = await Order.findById(id);
+    if (!order) {
+      throw new Error("Order not found.");
+    }
     const { status } = req.body;
     if (!status) {
       throw new Error("Select Order status.");
     }
-    order.orderStatus = status;
+    order.status = status;
     await order.save();
-    res.json({ order });
+    res.status(200).json({ order });
   } catch (error) {
     throw new Error(error);
   }
@@ -682,52 +667,56 @@ const getMonthWiseOrderIncome = expressAsyncHandler(async (req, res) => {
         },
       },
     ]);
-    res.json(data);
+    res.status(200).json(data);
   } catch (error) {
     throw new Error(error);
   }
 });
 
 const getYearlyOrders = expressAsyncHandler(async (req, res) => {
-  let monthNames = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
-  let d = new Date();
-  let endDate = "";
-  d.setDate(1);
-  for (let index = 0; index < 11; index++) {
-    d.setMonth(d.getMonth() - 1);
-    endDate = monthNames[d.getMonth()] + " " + d.getFullYear();
-  }
-  const data = await Order.aggregate([
-    {
-      $match: {
-        createdAt: {
-          $lte: new Date(),
-          $gte: new Date(endDate),
+  try {
+    let monthNames = [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ];
+    let d = new Date();
+    let endDate = "";
+    d.setDate(1);
+    for (let index = 0; index < 11; index++) {
+      d.setMonth(d.getMonth() - 1);
+      endDate = monthNames[d.getMonth()] + " " + d.getFullYear();
+    }
+    const data = await Order.aggregate([
+      {
+        $match: {
+          createdAt: {
+            $lte: new Date(),
+            $gte: new Date(endDate),
+          },
         },
       },
-    },
-    {
-      $group: {
-        _id: null,
-        count: { $sum: 1 },
-        amount: { $sum: "$totalPriceAfterDiscount" },
+      {
+        $group: {
+          _id: null,
+          count: { $sum: 1 },
+          amount: { $sum: "$totalPriceAfterDiscount" },
+        },
       },
-    },
-  ]);
-  res.json(data);
+    ]);
+    res.status(200).json(data);
+  } catch (error) {
+    throw new Error(error);
+  }
 });
 
 module.exports = {
@@ -746,12 +735,11 @@ module.exports = {
   resetPassword,
   adminSignin,
   getWishlist,
-  saveUserAddress,
   adddProductToCart,
   getUserCart,
   applyCoupon,
   createOrder,
-  getMyOrders,
+  getUserOrders,
   getMonthWiseOrderIncome,
   getYearlyOrders,
   getAllOrders,

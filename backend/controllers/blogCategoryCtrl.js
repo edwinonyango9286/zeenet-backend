@@ -2,12 +2,15 @@ const BlogCategory = require("../models/blogCategoryModel");
 const expressAsyncHandler = require("express-async-handler");
 const validateMongodbId = require("../utils/validateMongodbId");
 const redis = require("../utils/redis");
-const { json } = require("body-parser");
 
 const createABlogCategory = expressAsyncHandler(async (req, res) => {
   try {
+    const { title } = req.body;
+    if (!title) {
+      throw new Error("Please provide all the required fields");
+    }
     const createdBlogCategory = await BlogCategory.create(req.body);
-    res.json(createdBlogCategory);
+    res.status(201).json(createdBlogCategory);
   } catch (error) {
     throw new Error(error);
   }
@@ -15,6 +18,10 @@ const createABlogCategory = expressAsyncHandler(async (req, res) => {
 
 const updateABlogCategory = expressAsyncHandler(async (req, res) => {
   try {
+    const { title } = req.body;
+    if (!title) {
+      throw new Error("Please provide all the required fields");
+    }
     const { id } = req.params;
     validateMongodbId(id);
     const updatedBlogCategory = await BlogCategory.findByIdAndUpdate(
@@ -24,7 +31,10 @@ const updateABlogCategory = expressAsyncHandler(async (req, res) => {
         new: true,
       }
     );
-    res.json(updatedBlogCategory);
+    if (!updatedBlogCategory) {
+      throw new Error("Blog category not found.");
+    }
+    res.status(200).json(updatedBlogCategory);
   } catch (error) {
     throw new Error(error);
   }
@@ -35,7 +45,10 @@ const deleteABlogCategory = expressAsyncHandler(async (req, res) => {
     const { id } = req.params;
     validateMongodbId(id);
     const deletedBlogCategory = await BlogCategory.findByIdAndDelete(id);
-    res.json(deletedBlogCategory);
+    if (!deletedBlogCategory) {
+      throw new Error("Blog category not found.");
+    }
+    res.status(200).json(deletedBlogCategory);
   } catch (error) {
     throw new Error(error);
   }
@@ -48,11 +61,14 @@ const getABlogCategory = expressAsyncHandler(async (req, res) => {
     const cacheKey = `blogCategory:${id}`;
     const cachedBlogCategory = await redis.get(cacheKey);
     if (cachedBlogCategory) {
-      return res.json(JSON.parse(cachedBlogCategory));
+      return res.status(200).json(JSON.parse(cachedBlogCategory));
     }
     const blogCategory = await BlogCategory.findById(id);
+    if (!blogCategory) {
+      throw new error("Blog category not found.");
+    }
     await redis.set(cacheKey, JSON.stringify(blogCategory));
-    res.json(blogCategory);
+    res.status(200).json(blogCategory);
   } catch (error) {
     throw new Error(error);
   }
@@ -63,11 +79,11 @@ const getAllBlogCategories = expressAsyncHandler(async (req, res) => {
     const cacheKey = `blogCategories`;
     const cachedBlogCategories = await redis.get(cacheKey);
     if (cachedBlogCategories) {
-      return res.json(JSON.parse(cachedBlogCategories));
+      return res.status(200).json(JSON.parse(cachedBlogCategories));
     }
     const blogCategories = await BlogCategory.find();
     await redis.set(cacheKey, JSON.stringify(blogCategories));
-    res.json(blogCategories);
+    res.status(200).json(blogCategories);
   } catch (error) {
     throw new Error(error);
   }

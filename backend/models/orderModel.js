@@ -11,57 +11,20 @@ const orderSchema = new mongoose.Schema(
       type: ObjectId,
       ref: "User",
       required: true,
+      trim:true,
     },
-    shippingInfo: {
-      firstName: {
-        type: String,
-        required: true,
-        minlength: 2,
-        maxlength: 32,
-        trim: true,
-      },
-      lastName: {
-        type: String,
-        required: true,
-        minlength: 2,
-        maxlength: 32,
-        trim: true,
-      },
-      email: {
-        type: String,
-        required: true,
-        unique: true,
-        lowercase: true,
-        minlength: 2,
-        maxlength: 32,
-        trim: true,
-      },
-      county: {
-        type: String,
-        required: true,
-        trim: true,
-      },
-      town: {
-        type: String,
-        required: true,
-        trim: true,
-      },
-      pickupStation: {
-        type: String,
-        required: true,
-        trim: true,
-      },
-    },
-    paymentInfo: {
+    paymentDetails: {
       mpesaOrderId: {
         type: String,
-        required: true,
+        required: [true, "Mpesa order ID is required"],
         trim: true,
+        minlength: [10, "Mpesa order ID must be at least 10 characters long"],
       },
       mpesaPaymentId: {
         type: String,
-        required: true,
+        required: [true, "Mpesa payment ID is required"],
         trim: true,
+        minlength: [10, "Mpesa payment ID must be at least 10 characters long"],
       },
     },
     orderedItems: [
@@ -69,16 +32,18 @@ const orderSchema = new mongoose.Schema(
         product: {
           type: ObjectId,
           ref: "Product",
-          required: true,
+          required: [true, "Product is required"],
+          trim:true,
         },
         quantity: {
           type: Number,
-          required: true,
+          required: [true, "Quantity is required"],
+          min: [1, "Quantity must be at least 1"],
         },
         price: {
           type: Number,
-          required: true,
-          trim: true,
+          required: [true, "Price is required"],
+          min: [0, "Price must be a positive number"],
         },
       },
     ],
@@ -88,21 +53,25 @@ const orderSchema = new mongoose.Schema(
     },
     month: {
       type: String,
-      default: new Date().getMonth(),
+      default: () => (new Date().getMonth() + 1).toString().padStart(2, "0"),
       trim: true,
     },
     totalPrice: {
       type: Number,
-      required: true,
+      required: [true, "Total price is required"],
+      min: [0, "Total price must be a positive number"],
     },
     totalPriceAfterDiscount: {
       type: Number,
-      required: true,
+      required: [true, "Total price after discount is required"],
+      min: [0, "Total price after discount must be a positive number"],
     },
-    orderStatus: {
+    status: {
       type: String,
       default: "Ordered",
+      required: [true, "Order status is required."],
       trim: true,
+      enum: ["Ordered", "Shipped", "Delivered", "Cancelled"],
     },
   },
   {
