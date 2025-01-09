@@ -21,7 +21,7 @@ const registerUser = expressAsyncHandler(async (req, res) => {
     if (!firstName || !lastName || !email || !phoneNumber || !password) {
       throw new Error("Please fill in all the required fields.");
     }
-    const phoneRegex = /^\+?[1-9]\d{1,14}$/;
+    const phoneRegex = /^\+?[0-9]\d{1,14}$/;
     if (!phoneRegex.test(phoneNumber)) {
       throw new Error("Please provide a valid phone number.");
     }
@@ -42,8 +42,8 @@ const registerUser = expressAsyncHandler(async (req, res) => {
   }
 });
 
-// login user
-const siginUser = expressAsyncHandler(async (req, res) => {
+// Signin user
+const signInUser = expressAsyncHandler(async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
@@ -73,7 +73,8 @@ const siginUser = expressAsyncHandler(async (req, res) => {
       maxAge: parseInt(process.env.REFRESH_TOKEN_MAX_AGE),
     });
     res.status(200).json({
-      firstname: user?.firstName,
+      firstName: user?.firstName,
+      lastName: user?.lastName,
       email: user?.email,
       avatar: user?.avatar,
       token: accessToken,
@@ -84,7 +85,7 @@ const siginUser = expressAsyncHandler(async (req, res) => {
 });
 
 //Sign in admin
-const adminSignin = expressAsyncHandler(async (req, res) => {
+const adminSignIn = expressAsyncHandler(async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
@@ -236,7 +237,7 @@ const getAUser = expressAsyncHandler(async (req, res) => {
     if (!user) {
       throw new Error("User not found.");
     }
-    await redis.set(cacheKey, JSON.stringify(user), "EX",1);
+    await redis.set(cacheKey, JSON.stringify(user), "EX", 1);
     res.status(200).json({
       user,
     });
@@ -291,6 +292,8 @@ const blockUser = expressAsyncHandler(async (req, res) => {
     throw new Error(error);
   }
 });
+
+
 
 const unBlockUser = expressAsyncHandler(async (req, res) => {
   try {
@@ -440,7 +443,7 @@ const getWishlist = expressAsyncHandler(async (req, res) => {
       return res.status(200).json(JSON.parse(cachedWishlist));
     }
     const user = await User.findById(_id).populate("wishlist");
-    await redis.set(cacheKey, JSON.stringify(user), "EX",1);
+    await redis.set(cacheKey, JSON.stringify(user), "EX", 1);
     res.status(200).json(user);
   } catch (error) {
     throw new Error(error);
@@ -584,7 +587,7 @@ const getAllOrders = expressAsyncHandler(async (req, res) => {
       return res.status(200).json(JSON.parse(cachedOrders));
     }
     const orders = await Order.find().populate("user");
-    await redis.set(cacheKey, JSON.stringify(orders), "EX",1);
+    await redis.set(cacheKey, JSON.stringify(orders), "EX", 1);
     res.status(200).json({ orders });
   } catch (error) {
     throw new Error(error);
@@ -721,7 +724,7 @@ const getYearlyOrders = expressAsyncHandler(async (req, res) => {
 
 module.exports = {
   registerUser,
-  siginUser,
+  signInUser,
   getAllUsers,
   getAUser,
   deleteAUser,
@@ -733,7 +736,7 @@ module.exports = {
   updatePassword,
   forgotPasswordToken,
   resetPassword,
-  adminSignin,
+  adminSignIn,
   getWishlist,
   adddProductToCart,
   getUserCart,

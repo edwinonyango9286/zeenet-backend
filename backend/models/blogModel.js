@@ -64,8 +64,25 @@ const blogSchema = new mongoose.Schema(
       trim: true,
     },
     images: {
-      type: [String],
-      required: true,
+      type: [
+        {
+          public_id: {
+            type: String,
+            required: true,
+          },
+          url: {
+            type: String,
+            required: true,
+          },
+        },
+      ],
+      // validation to ensure that the array has at least one image
+      validate: {
+        validator: function (v) {
+          return v.length > 0;
+        },
+        message: "At least one image is required.",
+      },
     },
   },
   {

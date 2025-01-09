@@ -64,7 +64,6 @@ const productSchema = new mongoose.Schema(
       trim: true,
       min: [0, "Screen size can not be negative."],
     },
-
     images: {
       type: [
         {

@@ -22,7 +22,7 @@ const enquirySchema = new mongoose.Schema({
     type: String,
     required: [true, "Phone Number is required."],
     trim: true,
-    match: [/^\+?[1-9]\d{1,14}$/, "Please provide a valid phone number."],
+    match: [/^\+?[0-9]\d{1,14}$/, "Please provide a valid phone number."],
   },
   enquiry: {
     type: String,

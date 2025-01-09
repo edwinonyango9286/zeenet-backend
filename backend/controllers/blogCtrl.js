@@ -55,8 +55,8 @@ const getBlog = expressAsyncHandler(async (req, res) => {
 
 const getAllBlogs = expressAsyncHandler(async (req, res) => {
   try {
-    const getBlogs = await Blog.find();
-    res.status(200).json(getBlogs);
+    const blogs = await Blog.find().populate("category");
+    res.status(200).json(blogs);
   } catch (error) {
     throw new Error(error);
   }

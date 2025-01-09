@@ -41,7 +41,7 @@ const userSchema = new mongoose.Schema(
       required: [true, "Phone number is required."],
       unique: true,
       trim: true,
-      match: [/^\+?[1-9]\d{1,14}$/, "Please provide a valid phone number"], // E.164 format
+      match: [/^\+?[0-9]\d{1,14}$/, "Please provide a valid phone number"],
       index: true,
     },
     avatar: {
