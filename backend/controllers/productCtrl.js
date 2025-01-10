@@ -111,14 +111,16 @@ const getaProduct = expressAsyncHandler(async (req, res) => {
     const cacheKey = `product:${id}`;
     const cachedProduct = await redis.get(cacheKey);
     if (cachedProduct) {
-      return res.json(JSON.parse(cachedProduct));
+      return res.status(200).json(JSON.parse(cachedProduct));
     }
-    const product = await Product.findById(id);
+    const product = await Product.findById(id)
+      .populate("brand")
+      .populate("category");
     if (!product) {
       throw new Error("Product currently out of stock.");
     }
-    await redis.set(cacheKey, JSON.stringify(product), "EX",1);
-    res.json(product);
+    await redis.set(cacheKey, JSON.stringify(product), "EX", 1);
+    res.status(200).json(product);
   } catch (error) {
     throw new Error(error);
   }
@@ -164,24 +166,12 @@ const getallProducts = expressAsyncHandler(async (req, res) => {
       return res.status(200).json(JSON.parse(cachedProducts));
     }
     const products = await query;
-    await redis.set(cacheKey, JSON.stringify(products), "EX",1);
+    await redis.set(cacheKey, JSON.stringify(products), "EX", 1);
     res.status(200).json(products);
   } catch (error) {
     throw new Error(error);
   }
 });
-
-// const getallProducts = expressAsyncHandler(async (req, res) => {
-//   try {
-//     const products = await Product.find()
-//       .populate("category")
-//       .populate("brand");
-
-//     res.status(200).json(products);
-//   } catch (error) {
-//     throw new Error(error);
-//   }
-// });
 
 const addToWishlist = expressAsyncHandler(async (req, res) => {
   try {
@@ -212,8 +202,8 @@ const addToWishlist = expressAsyncHandler(async (req, res) => {
       );
       const userWishlist = await User.findById(_id).populate("wishlist");
       const cacheKey = `user:${_id}:wishlist`;
-      await redis.set(cacheKey, JSON.stringify(userWishlist), "EX",1);
-      res.json(userWishlist);
+      await redis.set(cacheKey, JSON.stringify(userWishlist), "EX", 1);
+      res.status(200).json(userWishlist);
     } else {
       let user = await User.findByIdAndUpdate(
         _id,
