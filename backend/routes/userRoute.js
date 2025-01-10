@@ -11,7 +11,7 @@ const {
   handleRefreshToken,
   logout,
   updatePassword,
-  forgotPasswordToken,
+  resetUserPasswordToken,
   resetPassword,
   adminSignIn,
   getWishlist,
@@ -24,7 +24,7 @@ const {
   getYearlyOrders,
   getAllOrders,
   getASingleOrder,
-  forgotPasswordAdminToken,
+  resetAdminPasswordToken,
   updateOrderStatus,
 } = require("../controllers/userCtrl");
 const { authMiddleware, isAdmin } = require("../middlewares/authMiddleware");
@@ -33,8 +33,8 @@ const router = express.Router();
 router.post("/register", registerUser);
 router.post("/signin", signInUser);
 router.post("/admin-signin", adminSignIn);
-router.post("/forgot-password-token", forgotPasswordToken);
-router.post("/forgot-password-admin-token", forgotPasswordAdminToken);
+router.post("/reset-password-token", resetUserPasswordToken);
+router.post("/reset-password-admin-token", resetAdminPasswordToken);
 router.put("/reset-password/:token", resetPassword);
 router.put("/update-password", authMiddleware, updatePassword);
 router.post("/cart", authMiddleware, adddProductToCart);
@@ -59,7 +59,7 @@ router.put(
   updateOrderStatus
 );
 router.get("/refreshAccessToken", handleRefreshToken);
-router.put("/logout", logout);
+router.put("/logout", authMiddleware, logout);
 router.get("/get-user-wishlist", authMiddleware, getWishlist);
 router.get("/:id", authMiddleware, getAUser);
 router.delete("/delete/:id", authMiddleware, deleteAUser);

@@ -76,8 +76,9 @@ const signInUser = expressAsyncHandler(async (req, res) => {
       firstName: user?.firstName,
       lastName: user?.lastName,
       email: user?.email,
+      phoneNumber: user?.phoneNumber,
       avatar: user?.avatar,
-      token: accessToken,
+      accessToken: accessToken,
     });
   } catch (error) {
     throw new Error(error);
@@ -119,7 +120,7 @@ const adminSignIn = expressAsyncHandler(async (req, res) => {
       firstName: user.firstName,
       email: user.email,
       avatar: user.avatar,
-      token: accessToken,
+      accessToken: accessToken,
     });
   } catch (error) {
     throw new Error(error);
@@ -166,7 +167,7 @@ const logout = expressAsyncHandler(async (req, res) => {
         secure: false,
       });
       return res
-        .status(204)
+        .status(200)
         .json({ message: "You have sucessfully logged out." });
     }
     await User.findOneAndUpdate(
@@ -180,7 +181,7 @@ const logout = expressAsyncHandler(async (req, res) => {
       secure: false,
       sameSite: "strict",
     });
-    res.status(204).json({ message: "You have succefully logged out." });
+    res.status(200).json({ message: "You have succefully logged out." });
   } catch (error) {
     throw new Error(error);
   }
@@ -293,8 +294,6 @@ const blockUser = expressAsyncHandler(async (req, res) => {
   }
 });
 
-
-
 const unBlockUser = expressAsyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
@@ -344,7 +343,7 @@ const updatePassword = expressAsyncHandler(async (req, res) => {
   }
 });
 
-const forgotPasswordToken = expressAsyncHandler(async (req, res) => {
+const resetUserPasswordToken = expressAsyncHandler(async (req, res) => {
   try {
     const { email } = req.body;
     if (!email) {
@@ -358,9 +357,9 @@ const forgotPasswordToken = expressAsyncHandler(async (req, res) => {
       throw new Error(
         "We couldn't find an account associated with this email address. Please check the email and try again."
       );
-    const token = await user.createPasswordResetToken();
+    const resetPasswordToken = await user.createPasswordResetToken();
     await user.save();
-    const resetURL = `Hi, Please follow this link to reset your password. This link is valid 10 minutes from now. <a href='https://zeenet-frontstore.onrender.com/reset-password/${token}'>Click Here</>`;
+    const resetURL = `Hi, Please follow this link to reset your password. This link is valid 10 minutes from now. <a href='https://zeenet-frontstore.onrender.com/reset-password/${resetPasswordToken}'>Click Here</>`;
     const data = {
       to: email,
       text: "Zeenet e-commerce.",
@@ -368,13 +367,16 @@ const forgotPasswordToken = expressAsyncHandler(async (req, res) => {
       html: resetURL,
     };
     sendEmail(data);
-    res.status(200).json(token);
+    res.status(200).json({
+      message:
+        "A password reset token has been sent to your email. Please check your inbox and follow the instructions to reset your password.",
+    });
   } catch (error) {
     throw new Error(error);
   }
 });
 
-const forgotPasswordAdminToken = expressAsyncHandler(async (req, res) => {
+const resetAdminPasswordToken = expressAsyncHandler(async (req, res) => {
   try {
     const { email } = req.body;
     if (!email) {
@@ -390,9 +392,9 @@ const forgotPasswordAdminToken = expressAsyncHandler(async (req, res) => {
     if (user.role !== "admin") {
       throw new Error("Not authorised.");
     }
-    const token = await user.createPasswordResetToken();
+    const resetPasswordToken = await user.createPasswordResetToken();
     await user.save();
-    const resetURL = `Hi, Please follow this link to reset Your Password. This link is valid 10 minutes from now. <a href='https://zeenet-adminapp.onrender.com/reset-password/${token}'>Click Here</>`;
+    const resetURL = `Hi, Please follow this link to reset Your Password. This link is valid 10 minutes from now. <a href='https://zeenet-adminapp.onrender.com/reset-password/${resetPasswordToken}'>Click Here</>`;
     const data = {
       to: email,
       text: "Zeenet e-commerce.",
@@ -400,7 +402,10 @@ const forgotPasswordAdminToken = expressAsyncHandler(async (req, res) => {
       html: resetURL,
     };
     sendEmail(data);
-    res.status(200).json(token);
+    res.status(200).json({
+      message:
+        "A password reset token has been sent to your email. Please check your inbox and follow the instructions to reset your password.",
+    });
   } catch (error) {
     throw new Error(error);
   }
@@ -734,7 +739,7 @@ module.exports = {
   handleRefreshToken,
   logout,
   updatePassword,
-  forgotPasswordToken,
+  resetUserPasswordToken,
   resetPassword,
   adminSignIn,
   getWishlist,
@@ -748,5 +753,5 @@ module.exports = {
   getAllOrders,
   getASingleOrder,
   updateOrderStatus,
-  forgotPasswordAdminToken,
+  resetAdminPasswordToken,
 };
