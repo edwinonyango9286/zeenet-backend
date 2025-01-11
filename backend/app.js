@@ -48,6 +48,11 @@ const BrandRouter = require("./routes/brandRoute");
 const couponRouter = require("./routes/couponRoute");
 const enquiryRouter = require("./routes/enquiryRoute");
 const uploadRouter = require("./routes/uploadRoute");
+const countryRouter = require("./routes/countryRoute");
+const townRouter = require("./routes/townRoute");
+const deliveryStationRouter = require("./routes/deliveryStationRoute");
+const countyRouter = require("./routes/countyRoute");
+
 const paymentRoute = require("./routes/paymentRoute");
 
 app.use("/api/user", userRouter);
@@ -60,5 +65,9 @@ app.use("/api/coupon", couponRouter);
 app.use("/api/enquiry", enquiryRouter);
 app.use("/api/upload", uploadRouter);
 app.use("/api/payment", paymentRoute);
+app.use("/api/country", countryRouter);
+app.use("/api/county", countyRouter);
+app.use("/api/town", townRouter);
+app.use("/api/deliverystation", deliveryStationRouter);
 
 module.exports = app;

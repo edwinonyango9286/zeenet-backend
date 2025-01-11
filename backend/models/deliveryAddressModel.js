@@ -26,7 +26,7 @@ var deliveryAddressSchema = new mongoose.Schema(
       minlength: [2, "Town must be at least 2 characters long"],
       maxlength: [32, "Town must be atmost 32 characters long."],
     },
-    station: {
+    deliveryStation: {
       type: String,
       required: [true, "Station is required."],
       trim: true,
