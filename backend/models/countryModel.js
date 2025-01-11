@@ -24,4 +24,24 @@ countrySchema.pre("save", function (next) {
   next();
 });
 
+// Pre-update hook for updating country
+countrySchema.pre("findOneAndUpdate", function (next) {
+  if (this._update.name) {
+    this._update.name = this._update.name.replace(/\b\w/g, (char) =>
+      char.toUpperCase()
+    );
+  }
+  next();
+});
+
+// Pre-update hook for updating multiple countries
+countrySchema.pre("updateMany", function (next) {
+  if (this._update.name) {
+    this._update.name = this._update.name.replace(/\b\w/g, (char) =>
+      char.toUpperCase()
+    );
+  }
+  next();
+});
+
 module.exports = mongoose.model("Country", countrySchema);

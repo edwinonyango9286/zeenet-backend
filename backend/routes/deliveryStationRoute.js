@@ -14,6 +14,6 @@ router.post("/create", authMiddleware, isAdmin, createDeliveryStation);
 router.put("/update/:id", authMiddleware, isAdmin, updateDeliveryStation);
 router.delete("/delete/:id", authMiddleware, isAdmin, deleteDeliveryStation);
 router.get("/get/:id", getDeliveryStation);
-router.get("/getallcountries", getallDeliveryStations);
+router.get("/getalldeliverystations", getallDeliveryStations);
 
 module.exports = router;

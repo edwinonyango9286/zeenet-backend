@@ -24,4 +24,24 @@ countySchema.pre("save", function (next) {
   next();
 });
 
+// Pre-update hook for updating county
+countySchema.pre("findOneAndUpdate", function (next) {
+  if (this._update.name) {
+    this._update.name = this._update.name.replace(/\b\w/g, (char) =>
+      char.toUpperCase()
+    );
+  }
+  next();
+
+  // Pre-update hook for updating multiple county
+  countySchema.pre("updateMany", function (next) {
+    if (this._update.name) {
+      this._update.name = this._update.name.replace(/\b\w/g, (char) =>
+        char.toUpperCase()
+      );
+    }
+    next();
+  });
+});
+
 module.exports = mongoose.model("County", countySchema);
