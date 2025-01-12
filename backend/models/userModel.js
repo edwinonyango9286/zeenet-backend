@@ -74,6 +74,12 @@ const userSchema = new mongoose.Schema(
         type: ObjectId,
         ref: "DeliveryAddress",
         trim: true,
+        validate: {
+          validator: function (v) {
+            return ObjectId.isValid(v);
+          },
+          message: "Invalid Country ID.",
+        },
       },
     ],
     wishlist: [
@@ -81,6 +87,12 @@ const userSchema = new mongoose.Schema(
         type: ObjectId,
         ref: "Product",
         trim: true,
+        validate: {
+          validator: function (v) {
+            return ObjectId.isValid(v);
+          },
+          message: "Invalid Country ID.",
+        },
       },
     ],
     refreshToken: {

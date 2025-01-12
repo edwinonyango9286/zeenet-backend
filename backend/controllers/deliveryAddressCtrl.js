@@ -4,8 +4,8 @@ const validateMongodbId = require("../utils/validateMongodbId");
 
 const createDeliveryAddress = expressAsyncHandler(async (req, res) => {
   try {
-    const { country, county, town, station } = req.body;
-    if (!country || !county || !town || !station) {
+    const { user, country, county, town, deliveryStation } = req.body;
+    if (!user || !country || !county || !town || !deliveryStation) {
       throw new Error("Please provide all the required fields.");
     }
     const createdDeliveryAddress = await DeliveryAddress.create(req.body);
@@ -14,6 +14,7 @@ const createDeliveryAddress = expressAsyncHandler(async (req, res) => {
     throw new Error(error);
   }
 });
+
 
 const getDeliveryAddress = expressAsyncHandler(async (req, res) => {
   try {
@@ -28,12 +29,13 @@ const getDeliveryAddress = expressAsyncHandler(async (req, res) => {
   }
 });
 
+
 const updateDeliveryAddress = expressAsyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
     validateMongodbId(id);
-    const { country, county, town, station } = req.body;
-    if (!country || !county || !town || !station) {
+    const { country, county, town, deliveryStation } = req.body;
+    if (!country || !county || !town || !deliveryStation) {
       throw new Error("Please provide all the required fields.");
     }
     const updatedDeliveryAddress = await DeliveryAddress.findByIdAndUpdate(

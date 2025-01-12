@@ -228,21 +228,26 @@ const addToWishlist = expressAsyncHandler(async (req, res) => {
 const rating = expressAsyncHandler(async (req, res) => {
   try {
     const { _id } = req.user;
-    const { star, prodId, comment } = req.body;
+    const { star, prodId, ratingComment } = req.body;
     validateMongodbId(_id);
     validateMongodbId(prodId);
-    if (!star || !comment) {
-      throw new Error("Please provide a rating and comment for this product.");
+    if (!star || !ratingComment) {
+      throw new Error(
+        "Please provide a rating and rating comment for this product."
+      );
     }
     const product = await Product.findById(prodId);
     let alreadyRated = product.ratings.find(
-      (userId) => userId.postedby.toString() === _id.toString()
+      (userId) => userId?.postedby?.toString() === _id?.toString()
     );
     if (alreadyRated) {
       const updateRating = await Product.updateOne(
         { ratings: { $elemMatch: alreadyRated } },
         {
-          $set: { "ratings.$.star": star, "ratings.$.comment": comment },
+          $set: {
+            "ratings.$.star": star,
+            "ratings.$.ratingComment": ratingComment,
+          },
         },
         { new: true }
       );
@@ -253,7 +258,7 @@ const rating = expressAsyncHandler(async (req, res) => {
           $push: {
             ratings: {
               star: star,
-              comment: comment,
+              ratingComment: ratingComment,
               postedby: _id,
             },
           },
@@ -261,7 +266,6 @@ const rating = expressAsyncHandler(async (req, res) => {
         { new: true }
       );
     }
-
     const getallratings = await Product.findById(prodId);
     let totalrating = getallratings.ratings.length;
     let ratingsum = getallratings.ratings

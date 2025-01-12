@@ -11,12 +11,24 @@ const cartSchema = new mongoose.Schema(
       ref: "User",
       required: [true, "user Id is required."],
       trim: true,
+      validate: {
+        validator: function (v) {
+          return ObjectId.isValid(v);
+        },
+        message: "Invalid Country ID.",
+      },
     },
     productId: {
       type: ObjectId,
       ref: "Product",
       required: [true, "Product Id is required."],
       trim: true,
+      validate: {
+        validator: function (v) {
+          return ObjectId.isValid(v);
+        },
+        message: "Invalid Country ID.",
+      },
     },
     quantity: {
       type: Number,

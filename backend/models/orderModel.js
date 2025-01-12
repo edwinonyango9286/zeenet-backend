@@ -11,7 +11,13 @@ const orderSchema = new mongoose.Schema(
       type: ObjectId,
       ref: "User",
       required: true,
-      trim:true,
+      trim: true,
+      validate: {
+        validator: function (v) {
+          return ObjectId.isValid(v);
+        },
+        message: "Invalid Country ID.",
+      },
     },
     paymentDetails: {
       mpesaOrderId: {
@@ -33,7 +39,13 @@ const orderSchema = new mongoose.Schema(
           type: ObjectId,
           ref: "Product",
           required: [true, "Product is required"],
-          trim:true,
+          trim: true,
+          validate: {
+            validator: function (v) {
+              return ObjectId.isValid(v);
+            },
+            message: "Invalid Country ID.",
+          },
         },
         quantity: {
           type: Number,

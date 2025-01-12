@@ -41,12 +41,24 @@ const productSchema = new mongoose.Schema(
       required: [true, "Category is required."],
       ref: "ProductCategory",
       trim: true,
+      validate: {
+        validator: function (v) {
+          return ObjectId.isValid(v);
+        },
+        message: "Invalid Country ID.",
+      },
     },
     brand: {
       type: ObjectId,
       required: [true, "Brand is required."],
       ref: "Brand",
       trim: true,
+      validate: {
+        validator: function (v) {
+          return ObjectId.isValid(v);
+        },
+        message: "Invalid Country ID.",
+      },
     },
     quantity: {
       type: Number,
@@ -102,7 +114,7 @@ const productSchema = new mongoose.Schema(
             return this.ratings && this.ratings.length > 0;
           },
         },
-        comment: {
+        ratingComment: {
           type: String,
           required: function () {
             return this.ratings && this.ratings.length > 0;
@@ -112,6 +124,12 @@ const productSchema = new mongoose.Schema(
           type: ObjectId,
           ref: "User",
           trim: true,
+          validate: {
+            validator: function (v) {
+              return ObjectId.isValid(v);
+            },
+            message: "Invalid Country ID.",
+          },
           required: function () {
             return this.ratings && this.ratings.length > 0;
           },

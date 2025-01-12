@@ -59,7 +59,7 @@ router.put(
   updateOrderStatus
 );
 router.get("/refreshAccessToken", handleRefreshToken);
-router.put("/logout", authMiddleware, logout);
+router.put("/logout",logout);
 router.get("/get-user-wishlist", authMiddleware, getWishlist);
 router.get("/:id", authMiddleware, getAUser);
 router.delete("/delete/:id", authMiddleware, deleteAUser);

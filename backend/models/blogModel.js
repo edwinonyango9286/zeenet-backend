@@ -27,6 +27,12 @@ const blogSchema = new mongoose.Schema(
       required: [true, "Category is required."],
       ref: "BlogCategory",
       trim: true,
+      validate: {
+        validator: function (v) {
+          return ObjectId.isValid(v);
+        },
+        message: "Invalid Country ID.",
+      },
     },
     numViews: {
       type: Number,
@@ -45,6 +51,12 @@ const blogSchema = new mongoose.Schema(
         type: ObjectId,
         ref: "User",
         trim: true,
+        validate: {
+          validator: function (v) {
+            return ObjectId.isValid(v);
+          },
+          message: "Invalid Country ID.",
+        },
       },
     ],
     dislikes: [
@@ -52,6 +64,12 @@ const blogSchema = new mongoose.Schema(
         type: ObjectId,
         ref: "User",
         trim: true,
+        validate: {
+          validator: function (v) {
+            return ObjectId.isValid(v);
+          },
+          message: "Invalid Country ID.",
+        },
       },
     ],
     author: {
