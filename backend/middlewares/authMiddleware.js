@@ -4,13 +4,13 @@ const asyncHandler = require("express-async-handler");
 
 const authMiddleware = asyncHandler(async (req, res, next) => {
   try {
-    let accessToken;
+    let token;
     if (req?.headers?.authorization?.startsWith("Bearer")) {
-      accessToken = req.headers.authorization.split(" ")[1];
-      if (!accessToken) {
+      token = req.headers.authorization.split(" ")[1];
+      if (!token) {
         throw new Error("Please login to proceed.");
       }
-      const decoded = jwt.verify(accessToken, process.env.JWT_SECRET);
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
       const user = await User.findById(decoded?.id);
       req.user = user;
       next();
@@ -19,8 +19,6 @@ const authMiddleware = asyncHandler(async (req, res, next) => {
     throw new Error(error);
   }
 });
-
-
 
 const isAdmin = asyncHandler(async (req, res, next) => {
   try {
