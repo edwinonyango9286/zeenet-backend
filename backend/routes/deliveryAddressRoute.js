@@ -2,19 +2,23 @@ const express = require("express");
 
 const { isAdmin, authMiddleware } = require("../middlewares/authMiddleware");
 const {
-  createDeliveryAddress,
+  addDeliveryAddress,
   updateDeliveryAddress,
   deleteDeliveryAddress,
   getAllDeliveryAddresses,
-  getDeliveryAddress,
+  getUserDeliveryAddresses,
 } = require("../controllers/deliveryAddressCtrl");
 
 const router = express.Router();
 
-router.post("/create", authMiddleware, createDeliveryAddress);
+router.post("/create", authMiddleware, addDeliveryAddress);
 router.put("/update/:id", authMiddleware, updateDeliveryAddress);
-router.delete("/delete/:id", authMiddleware, isAdmin, deleteDeliveryAddress);
-router.get("/get/:id", authMiddleware, getDeliveryAddress);
+router.delete("/delete/:id", authMiddleware, deleteDeliveryAddress);
+router.get(
+  "/getuserdeliveryaddresses",
+  authMiddleware,
+  getUserDeliveryAddresses
+);
 router.get(
   "/getalldeliveryaddresses",
   authMiddleware,

@@ -78,7 +78,7 @@ const userSchema = new mongoose.Schema(
           validator: function (v) {
             return ObjectId.isValid(v);
           },
-          message: "Invalid Country ID.",
+          message: "Invalid delivery address ID.",
         },
       },
     ],
@@ -91,7 +91,7 @@ const userSchema = new mongoose.Schema(
           validator: function (v) {
             return ObjectId.isValid(v);
           },
-          message: "Invalid Country ID.",
+          message: "Invalid product ID.",
         },
       },
     ],

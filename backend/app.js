@@ -52,6 +52,7 @@ const countryRouter = require("./routes/countryRoute");
 const townRouter = require("./routes/townRoute");
 const deliveryStationRouter = require("./routes/deliveryStationRoute");
 const countyRouter = require("./routes/countyRoute");
+const deliveryAddressRouter = require("./routes/deliveryAddressRoute");
 
 const paymentRoute = require("./routes/paymentRoute");
 
@@ -69,5 +70,6 @@ app.use("/api/country", countryRouter);
 app.use("/api/county", countyRouter);
 app.use("/api/town", townRouter);
 app.use("/api/deliverystation", deliveryStationRouter);
+app.use("/api/deliveryaddress", deliveryAddressRouter);
 
 module.exports = app;

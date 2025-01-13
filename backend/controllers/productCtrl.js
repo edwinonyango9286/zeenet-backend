@@ -185,7 +185,6 @@ const addToWishlist = expressAsyncHandler(async (req, res) => {
     }
     validateMongodbId(_id);
     validateMongodbId(productId);
-
     const user = await User.findById(_id);
     const alreadyadded = user.wishlist.find(
       (id) => id.toString() === productId
@@ -231,48 +230,59 @@ const rating = expressAsyncHandler(async (req, res) => {
     const { star, prodId, ratingComment } = req.body;
     validateMongodbId(_id);
     validateMongodbId(prodId);
+
     if (!star || !ratingComment) {
       throw new Error(
         "Please provide a rating and rating comment for this product."
       );
     }
+
+    // Transform the ratingComment
+    const formattedRatingComment = ratingComment.replace(
+      /(^\w{1}|\.\s*\w{1})/g,
+      (char) => char.toUpperCase()
+    );
+
     const product = await Product.findById(prodId);
     let alreadyRated = product.ratings.find(
-      (userId) => userId?.postedby?.toString() === _id?.toString()
+      (rating) => rating.postedBy.toString() === _id.toString()
     );
+
     if (alreadyRated) {
-      const updateRating = await Product.updateOne(
-        { ratings: { $elemMatch: alreadyRated } },
+      await Product.updateOne(
+        { _id: prodId, "ratings._id": alreadyRated._id },
         {
           $set: {
             "ratings.$.star": star,
-            "ratings.$.ratingComment": ratingComment,
+            "ratings.$.ratingComment": formattedRatingComment,
           },
         },
         { new: true }
       );
     } else {
-      const rateProduct = await Product.findByIdAndUpdate(
+      await Product.findByIdAndUpdate(
         prodId,
         {
           $push: {
             ratings: {
               star: star,
-              ratingComment: ratingComment,
-              postedby: _id,
+              ratingComment: formattedRatingComment,
+              postedBy: _id,
             },
           },
         },
         { new: true }
       );
     }
+
     const getallratings = await Product.findById(prodId);
-    let totalrating = getallratings.ratings.length;
-    let ratingsum = getallratings.ratings
+    const totalrating = getallratings.ratings.length;
+    const ratingsum = getallratings.ratings
       .map((item) => item.star)
       .reduce((prev, curr) => prev + curr, 0);
-    let actualRating = Math.round(ratingsum / totalrating);
-    let finalproduct = await Product.findByIdAndUpdate(
+    const actualRating = Math.round(ratingsum / totalrating);
+
+    const finalproduct = await Product.findByIdAndUpdate(
       prodId,
       {
         totalrating: actualRating,
@@ -281,9 +291,10 @@ const rating = expressAsyncHandler(async (req, res) => {
         new: true,
       }
     );
+
     res.status(200).json(finalproduct);
   } catch (error) {
-    throw new Error(error);
+    throw new Error(error.message);
   }
 });
 

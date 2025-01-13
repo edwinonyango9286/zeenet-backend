@@ -10,8 +10,8 @@ const productSchema = new mongoose.Schema(
       type: String,
       required: [true, "Title is required."],
       trim: true,
-      minlength: [2, "Title must be atleast 2 characters long."],
-      maxlength: [32, "Title must be atmost 32 characters long."],
+      minlength: [2, "Title must be at least 2 characters long."],
+      maxlength: [32, "Title must be at most 32 characters long."],
       index: true,
       match: [
         /^[a-zA-Z0-9\s]+$/,
@@ -26,8 +26,8 @@ const productSchema = new mongoose.Schema(
     description: {
       type: String,
       required: [true, "Description is required."],
-      minlength: [2, "Description must be atleast 2 characters long."],
-      maxlength: [2000, "Description must be atmost 2000 characters long."],
+      minlength: [2, "Description must be at least 2 characters long."],
+      maxlength: [2000, "Description must be at most 2000 characters long."],
       trim: true,
       index: true,
     },
@@ -45,7 +45,7 @@ const productSchema = new mongoose.Schema(
         validator: function (v) {
           return ObjectId.isValid(v);
         },
-        message: "Invalid Country ID.",
+        message: "Invalid category ID.",
       },
     },
     brand: {
@@ -57,12 +57,12 @@ const productSchema = new mongoose.Schema(
         validator: function (v) {
           return ObjectId.isValid(v);
         },
-        message: "Invalid Country ID.",
+        message: "Invalid brand ID.",
       },
     },
     quantity: {
       type: Number,
-      required: [true, "Quanity is required."],
+      required: [true, "Quantity is required."],
       min: [0, "Quantity must be a positive number."],
     },
     sold: {
@@ -70,11 +70,10 @@ const productSchema = new mongoose.Schema(
       default: 0,
       min: [0, "Sold quantity cannot be negative."],
     },
-
     screenSize: {
       type: Number,
       trim: true,
-      min: [0, "Screen size can not be negative."],
+      min: [0, "Screen size cannot be negative."],
     },
     images: {
       type: [
@@ -89,7 +88,6 @@ const productSchema = new mongoose.Schema(
           },
         },
       ],
-      // validation to ensure that the array has at least one image
       validate: {
         validator: function (v) {
           return v.length > 0;
@@ -97,46 +95,38 @@ const productSchema = new mongoose.Schema(
         message: "At least one image is required.",
       },
     },
-
     tags: {
       type: String,
-      required: [true, "Tags is required."],
+      required: [true, "Tags are required."],
       trim: true,
       enum: ["Featured", "Popular", "Special"],
       index: true,
     },
-
     ratings: [
       {
         star: {
           type: Number,
-          required: function () {
-            return this.ratings && this.ratings.length > 0;
-          },
+          required: [true, "Please provide star rating for the product."],
         },
         ratingComment: {
           type: String,
-          required: function () {
-            return this.ratings && this.ratings.length > 0;
-          },
+          required: [true, "Please provide rating comment for the product."],
+          trim: true,
         },
         postedBy: {
           type: ObjectId,
           ref: "User",
           trim: true,
+          required: [true, "Please login to proceed."],
           validate: {
             validator: function (v) {
               return ObjectId.isValid(v);
             },
-            message: "Invalid Country ID.",
-          },
-          required: function () {
-            return this.ratings && this.ratings.length > 0;
+            message: "Invalid user ID.",
           },
         },
       },
     ],
-
     totalRating: {
       type: String,
       default: 4,

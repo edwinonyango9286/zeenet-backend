@@ -16,7 +16,7 @@ var deliveryAddressSchema = new mongoose.Schema(
         validator: function (v) {
           return ObjectId.isValid(v);
         },
-        message: "Invalid Country ID.",
+        message: "Invalid user ID.",
       },
     },
     country: {

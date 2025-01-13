@@ -16,7 +16,7 @@ const orderSchema = new mongoose.Schema(
         validator: function (v) {
           return ObjectId.isValid(v);
         },
-        message: "Invalid Country ID.",
+        message: "Invalid user ID.",
       },
     },
     paymentDetails: {
@@ -44,7 +44,7 @@ const orderSchema = new mongoose.Schema(
             validator: function (v) {
               return ObjectId.isValid(v);
             },
-            message: "Invalid Country ID.",
+            message: "Invalid product ID.",
           },
         },
         quantity: {
@@ -59,6 +59,17 @@ const orderSchema = new mongoose.Schema(
         },
       },
     ],
+    deliveryAddress: {
+      type: ObjectId,
+      ref: "DeliveryAddress",
+      required: true,
+      validate: {
+        validator: function (v) {
+          return ObjectId.isValid(v);
+        },
+        message: "Invalid delivery address ID.",
+      },
+    },
     paidAt: {
       type: Date,
       default: Date.now(),

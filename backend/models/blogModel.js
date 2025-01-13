@@ -31,7 +31,7 @@ const blogSchema = new mongoose.Schema(
         validator: function (v) {
           return ObjectId.isValid(v);
         },
-        message: "Invalid Country ID.",
+        message: "Invalid blog category ID.",
       },
     },
     numViews: {
@@ -55,7 +55,7 @@ const blogSchema = new mongoose.Schema(
           validator: function (v) {
             return ObjectId.isValid(v);
           },
-          message: "Invalid Country ID.",
+          message: "Invalid user ID.",
         },
       },
     ],
@@ -68,7 +68,7 @@ const blogSchema = new mongoose.Schema(
           validator: function (v) {
             return ObjectId.isValid(v);
           },
-          message: "Invalid Country ID.",
+          message: "Invalid user ID.",
         },
       },
     ],

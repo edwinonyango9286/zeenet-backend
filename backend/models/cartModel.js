@@ -15,7 +15,7 @@ const cartSchema = new mongoose.Schema(
         validator: function (v) {
           return ObjectId.isValid(v);
         },
-        message: "Invalid Country ID.",
+        message: "Invalid user ID.",
       },
     },
     productId: {
@@ -27,7 +27,7 @@ const cartSchema = new mongoose.Schema(
         validator: function (v) {
           return ObjectId.isValid(v);
         },
-        message: "Invalid Country ID.",
+        message: "Invalid product ID.",
       },
     },
     quantity: {
