@@ -83,6 +83,7 @@ const updateProduct = expressAsyncHandler(async (req, res) => {
   }
 });
 
+
 const deleteProduct = expressAsyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
@@ -97,12 +98,13 @@ const deleteProduct = expressAsyncHandler(async (req, res) => {
     for (const key of productsCacheKeys) {
       await redis.del(key);
     }
-
     res.status(200).json(deletedProduct);
   } catch (error) {
     throw new Error(error);
   }
 });
+
+
 
 const getaProduct = expressAsyncHandler(async (req, res) => {
   try {
@@ -119,12 +121,13 @@ const getaProduct = expressAsyncHandler(async (req, res) => {
     if (!product) {
       throw new Error("Product currently out of stock.");
     }
-    await redis.set(cacheKey, JSON.stringify(product), "EX", 1);
+    await redis.set(cacheKey, JSON.stringify(product), "EX", 2);
     res.status(200).json(product);
   } catch (error) {
     throw new Error(error);
   }
 });
+
 
 const getallProducts = expressAsyncHandler(async (req, res) => {
   try {
@@ -166,12 +169,13 @@ const getallProducts = expressAsyncHandler(async (req, res) => {
       return res.status(200).json(JSON.parse(cachedProducts));
     }
     const products = await query;
-    await redis.set(cacheKey, JSON.stringify(products), "EX", 1);
+    await redis.set(cacheKey, JSON.stringify(products), "EX",2);
     res.status(200).json(products);
   } catch (error) {
     throw new Error(error);
   }
 });
+
 
 const addToWishlist = expressAsyncHandler(async (req, res) => {
   try {
@@ -201,7 +205,7 @@ const addToWishlist = expressAsyncHandler(async (req, res) => {
       );
       const userWishlist = await User.findById(_id).populate("wishlist");
       const cacheKey = `user:${_id}:wishlist`;
-      await redis.set(cacheKey, JSON.stringify(userWishlist), "EX", 1);
+      await redis.set(cacheKey, JSON.stringify(userWishlist), "EX", 2);
       res.status(200).json(userWishlist);
     } else {
       let user = await User.findByIdAndUpdate(
@@ -215,7 +219,7 @@ const addToWishlist = expressAsyncHandler(async (req, res) => {
       );
       const userWishlist = await User.findById(_id).populate("wishlist");
       const cacheKey = `user:${_id}:wishlist`;
-      await redis.set(cacheKey, JSON.stringify(userWishlist), "EX", 1);
+      await redis.set(cacheKey, JSON.stringify(userWishlist), "EX", 2);
 
       res.status(200).json(userWishlist);
     }

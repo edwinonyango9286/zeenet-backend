@@ -238,7 +238,7 @@ const getAUser = expressAsyncHandler(async (req, res) => {
     if (!user) {
       throw new Error("User not found.");
     }
-    await redis.set(cacheKey, JSON.stringify(user), "EX", 1);
+    await redis.set(cacheKey, JSON.stringify(user), "EX", 2);
     res.status(200).json({
       user,
     });
@@ -448,7 +448,7 @@ const getWishlist = expressAsyncHandler(async (req, res) => {
       return res.status(200).json(JSON.parse(cachedWishlist));
     }
     const user = await User.findById(_id).populate("wishlist");
-    await redis.set(cacheKey, JSON.stringify(user), "EX", 1);
+    await redis.set(cacheKey, JSON.stringify(user), "EX", 2);
     res.status(200).json(user);
   } catch (error) {
     throw new Error(error);
@@ -488,7 +488,7 @@ const getUserCart = expressAsyncHandler(async (req, res) => {
       return res.status(200).json(JSON.parse(cachedCart));
     }
     const cart = await Cart.find({ userId: _id }).populate("productId");
-    await redis.set(cacheKey, JSON.stringify(cart), "EX", 1);
+    await redis.set(cacheKey, JSON.stringify(cart), "EX", 2);
     res.status(200).json(cart);
   } catch (error) {
     throw new Error(error);
@@ -592,7 +592,7 @@ const getAllOrders = expressAsyncHandler(async (req, res) => {
       return res.status(200).json(JSON.parse(cachedOrders));
     }
     const orders = await Order.find().populate("user");
-    await redis.set(cacheKey, JSON.stringify(orders), "EX", 1);
+    await redis.set(cacheKey, JSON.stringify(orders), "EX", 2);
     res.status(200).json({ orders });
   } catch (error) {
     throw new Error(error);

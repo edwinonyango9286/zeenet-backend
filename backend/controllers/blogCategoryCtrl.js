@@ -67,7 +67,7 @@ const getABlogCategory = expressAsyncHandler(async (req, res) => {
     if (!blogCategory) {
       throw new error("Blog category not found.");
     }
-    await redis.set(cacheKey, JSON.stringify(blogCategory));
+    await redis.set(cacheKey, JSON.stringify(blogCategory), "EX", 2);
     res.status(200).json(blogCategory);
   } catch (error) {
     throw new Error(error);
@@ -82,7 +82,7 @@ const getAllBlogCategories = expressAsyncHandler(async (req, res) => {
       return res.status(200).json(JSON.parse(cachedBlogCategories));
     }
     const blogCategories = await BlogCategory.find();
-    await redis.set(cacheKey, JSON.stringify(blogCategories));
+    await redis.set(cacheKey, JSON.stringify(blogCategories), "EX", 2);
     res.status(200).json(blogCategories);
   } catch (error) {
     throw new Error(error);
