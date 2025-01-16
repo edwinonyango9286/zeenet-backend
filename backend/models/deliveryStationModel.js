@@ -10,10 +10,6 @@ const deliveryStationSchema = new mongoose.Schema(
       trim: true,
       minlength: [2, "Name must be atleast 2 characters long."],
       maxlength: [32, "Name must be atmost 32 characters long."],
-      match: [
-        /^[a-zA-Z0-9\s]+$/,
-        "Name can only contain alphanumeric characters and spaces.",
-      ],
     },
   },
   { timestamps: true }

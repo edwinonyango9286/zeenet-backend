@@ -13,10 +13,6 @@ const productSchema = new mongoose.Schema(
       minlength: [2, "Title must be at least 2 characters long."],
       maxlength: [32, "Title must be at most 32 characters long."],
       index: true,
-      match: [
-        /^[a-zA-Z0-9\s]+$/,
-        "Title can only contain alphanumeric characters and spaces.",
-      ],
     },
     slug: {
       type: String,

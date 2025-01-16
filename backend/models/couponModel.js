@@ -8,10 +8,6 @@ const couponSchema = new mongoose.Schema(
       unique: true,
       uppercase: true,
       trim: true,
-      match: [
-        /^[a-zA-Z0-9\s]+$/,
-        "Coupon can only contain alphanumeric characters and spaces.",
-      ],
     },
     expiry: {
       type: Date,
