@@ -577,7 +577,7 @@ const getUserOrders = expressAsyncHandler(async (req, res) => {
     const orders = await Order.find({ user: _id })
       .populate("user")
       .populate("orderedItems.product");
-    await redis.set(cacheKey, JSON.stringify(orders));
+    await redis.set(cacheKey, JSON.stringify(orders), "EX", 2);
     res.status(200).json({ orders });
   } catch (error) {
     throw new Error(error);
