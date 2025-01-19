@@ -54,6 +54,9 @@ const signInUser = expressAsyncHandler(async (req, res) => {
     }
     validatePassword(password);
     const user = await User.findOne({ email });
+    if (user.role === "admin") {
+      throw new Error("Not authorised.");
+    }
     if (!user) {
       throw new Error(
         "We couldn't find an account associated with this email address. Please check the email and try again."
@@ -84,6 +87,7 @@ const signInUser = expressAsyncHandler(async (req, res) => {
     throw new Error(error);
   }
 });
+
 
 //Sign in admin
 const adminSignIn = expressAsyncHandler(async (req, res) => {
