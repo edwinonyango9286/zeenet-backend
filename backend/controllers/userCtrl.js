@@ -53,7 +53,7 @@ const signInUser = expressAsyncHandler(async (req, res) => {
       throw new Error("Please provide a valid email address.");
     }
     validatePassword(password);
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).select("+password");
     if (user.role === "admin") {
       throw new Error("Not authorised.");
     }
@@ -88,7 +88,6 @@ const signInUser = expressAsyncHandler(async (req, res) => {
   }
 });
 
-
 //Sign in admin
 const adminSignIn = expressAsyncHandler(async (req, res) => {
   try {
@@ -100,7 +99,7 @@ const adminSignIn = expressAsyncHandler(async (req, res) => {
     if (!emailValidator.validate(email)) {
       throw new Error("Please provide a valid email address.");
     }
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).select("+password");
     if (!user) {
       throw new Error("User not found.");
     }
@@ -190,6 +189,8 @@ const logout = expressAsyncHandler(async (req, res) => {
     throw new Error(error);
   }
 });
+
+
 
 const updateAUser = expressAsyncHandler(async (req, res) => {
   try {

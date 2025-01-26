@@ -1,6 +1,6 @@
 // Import and setup express app
 const express = require("express");
-const app = express({ limit: "50mb" });
+const app = express();
 const dotenv = require("dotenv");
 dotenv.config();
 
@@ -33,8 +33,8 @@ const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const morgan = require("morgan");
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json({ limit: "50mb" }));
+app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
 app.use(cookieParser());
 app.use(morgan("dev"));
 
@@ -53,7 +53,6 @@ const townRouter = require("./routes/townRoute");
 const deliveryStationRouter = require("./routes/deliveryStationRoute");
 const countyRouter = require("./routes/countyRoute");
 const deliveryAddressRouter = require("./routes/deliveryAddressRoute");
-
 const paymentRoute = require("./routes/paymentRoute");
 
 app.use("/api/user", userRouter);
