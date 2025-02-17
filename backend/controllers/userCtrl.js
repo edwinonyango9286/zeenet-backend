@@ -35,7 +35,25 @@ const registerUser = expressAsyncHandler(async (req, res) => {
       );
     }
     const createdUser = await User.create(req.body);
-    res.status(200).json(createdUser);
+    // send an email confirmation for account creation.
+    if (createdUser) {
+      const accountConfirmation = `Hello ${
+        createdUser?.firstName.charAt(0).toUpperCase() +
+        createdUser?.firstName.slice(1)
+      }, Thank you for registering with Zeenet e-commerce. If you did not create an account, please ignore this email.`;
+      const data = {
+        to: createdUser?.email,
+        subject: "Account Confirmation",
+        text: "Zeenet e-commerce",
+        html: accountConfirmation,
+      };
+      await sendEmail(data);
+    }
+    // return user without password.
+    const userWithoutPassword = await User.findById(createdUser?._id).select(
+      "-password"
+    );
+    res.status(200).json(userWithoutPassword);
   } catch (error) {
     throw new Error(error);
   }
@@ -265,6 +283,10 @@ const deleteAUser = expressAsyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
     validateMongodbId(id);
+    const user = await User.findById(id);
+    if (user?.role === "admin") {
+      throw new Error("An admin account cannot be deleted.");
+    }
     const deletedUsers = await User.findByIdAndDelete(id);
     if (!deletedUsers) {
       throw new Error("User not found.");
@@ -370,10 +392,10 @@ const resetUserPasswordToken = expressAsyncHandler(async (req, res) => {
     const data = {
       to: email,
       text: "Zeenet e-commerce.",
-      subject: "Password reset link",
+      subject: "Password Reset Token.",
       html: resetURL,
     };
-    sendEmail(data);
+    await sendEmail(data);
     res.status(200).json({
       message:
         "A password reset token has been sent to your email. Please check your inbox and follow the instructions to reset your password.",
