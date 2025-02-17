@@ -26,12 +26,14 @@ const {
   getASingleOrder,
   resetAdminPasswordToken,
   updateOrderStatus,
+  registerAdmin,
 } = require("../controllers/userCtrl");
 const { authMiddleware, isAdmin } = require("../middlewares/authMiddleware");
 const router = express.Router();
 
 router.post("/register", registerUser);
 router.post("/signin", signInUser);
+router.post("/admin-register",registerAdmin)
 router.post("/admin-signin", adminSignIn);
 router.post("/reset-password-token", resetUserPasswordToken);
 router.post("/reset-password-admin-token", resetAdminPasswordToken);

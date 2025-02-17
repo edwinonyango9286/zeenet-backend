@@ -34,7 +34,52 @@ const registerUser = expressAsyncHandler(async (req, res) => {
         "This email address is already associated with an account. Please double check your email address and try again."
       );
     }
-    const createdUser = await User.create(req.body);
+    const createdUser = await User.create({ ...req.body, role: "user" });
+    // send an email confirmation for account creation.
+    if (createdUser) {
+      const accountConfirmation = `Hello ${
+        createdUser?.firstName.charAt(0).toUpperCase() +
+        createdUser?.firstName.slice(1)
+      }, Thank you for registering with Zeenet e-commerce. If you did not create an account, please ignore this email.`;
+      const data = {
+        to: createdUser?.email,
+        subject: "Account Confirmation",
+        text: "Zeenet e-commerce",
+        html: accountConfirmation,
+      };
+      await sendEmail(data);
+    }
+    // return user without password.
+    const userWithoutPassword = await User.findById(createdUser?._id).select(
+      "-password"
+    );
+    res.status(200).json(userWithoutPassword);
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
+const registerAdmin = expressAsyncHandler(async (req, res) => {
+  try {
+    const { firstName, lastName, email, phoneNumber, password } = req.body;
+    if (!firstName || !lastName || !email || !phoneNumber || !password) {
+      throw new Error("Please fill in all the required fields.");
+    }
+    const phoneRegex = /^\+?[0-9]\d{1,14}$/;
+    if (!phoneRegex.test(phoneNumber)) {
+      throw new Error("Please provide a valid phone number.");
+    }
+    validatePassword(password);
+    if (!emailValidator.validate(email)) {
+      throw new Error("Please provide a valid email address.");
+    }
+    const user = await User.findOne({ email });
+    if (user) {
+      throw new Error(
+        "This email address is already associated with an account. Please double check your email address and try again."
+      );
+    }
+    const createdUser = await User.create({ ...req.body, role: "admin" });
     // send an email confirmation for account creation.
     if (createdUser) {
       const accountConfirmation = `Hello ${
@@ -783,4 +828,5 @@ module.exports = {
   getASingleOrder,
   updateOrderStatus,
   resetAdminPasswordToken,
+  registerAdmin,
 };
