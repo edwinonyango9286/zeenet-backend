@@ -234,7 +234,6 @@ const rating = expressAsyncHandler(async (req, res) => {
     const { star, prodId, ratingComment } = req.body;
     validateMongodbId(_id);
     validateMongodbId(prodId);
-
     if (!star || !ratingComment) {
       throw new Error(
         "Please provide a rating and rating comment for this product."

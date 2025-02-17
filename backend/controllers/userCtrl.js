@@ -190,8 +190,6 @@ const logout = expressAsyncHandler(async (req, res) => {
   }
 });
 
-
-
 const updateAUser = expressAsyncHandler(async (req, res) => {
   try {
     const { _id } = req.user;
@@ -267,13 +265,19 @@ const deleteAUser = expressAsyncHandler(async (req, res) => {
     validateMongodbId(id);
     const deletedUsers = await User.findByIdAndDelete(id);
     if (!deletedUsers) {
-      throw new Error("User not found");
+      throw new Error("User not found.");
     }
-    res.status(200).json({ message: "User deleted succesfully", deletedUsers });
+    res
+      .status(200)
+      .json({ message: "User deleted succesfully.", deletedUsers });
   } catch (error) {
     throw new Error(error);
   }
 });
+
+
+
+
 
 const blockUser = expressAsyncHandler(async (req, res) => {
   try {
