@@ -17,7 +17,6 @@ const redis = require("../utils/redis");
 const registerUser = expressAsyncHandler(async (req, res) => {
   try {
     const { firstName, lastName, email, phoneNumber, password } = req.body;
-
     if (!firstName || !lastName || !email || !phoneNumber || !password) {
       throw new Error("Please fill in all the required fields.");
     }
@@ -32,7 +31,7 @@ const registerUser = expressAsyncHandler(async (req, res) => {
     const user = await User.findOne({ email });
     if (user) {
       throw new Error(
-        "This email address is already associated with an account. If this account is yours, you can reset your password"
+        "This email address is already associated with an account. Please double check your email address and try again."
       );
     }
     const createdUser = await User.create(req.body);
@@ -134,7 +133,9 @@ const handleRefreshToken = expressAsyncHandler(async (req, res) => {
   try {
     const cookie = req.cookies;
     if (!cookie.refreshToken) {
-      throw new Error("No refresh token in cookies.");
+      // if there is not token in cookies this means that the user had already logged out or the refresh token has expired from the cookies
+      // The user should log in again to get a new access token
+      throw new Error("Session expired. Please log in to proceed.");
     }
     const refreshToken = cookie.refreshToken;
     const user = await User.findOne({ refreshToken });
@@ -145,10 +146,11 @@ const handleRefreshToken = expressAsyncHandler(async (req, res) => {
     }
     jwt.verify(refreshToken, process.env.JWT_SECRET, (err, decoded) => {
       if (err || user.id !== decoded.id) {
-        throw new Error("Something is wrong with this refreshtoken...");
+        throw new Error("Invalid refresh token. Please login to proceed.");
       }
       const accessToken = generateAccessToken(user._id);
-      res.status(200).json({ accessToken });
+      req.user = user;
+      return accessToken;
     });
   } catch (error) {
     throw new Error(error);
@@ -274,10 +276,6 @@ const deleteAUser = expressAsyncHandler(async (req, res) => {
     throw new Error(error);
   }
 });
-
-
-
-
 
 const blockUser = expressAsyncHandler(async (req, res) => {
   try {
