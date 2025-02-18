@@ -3,257 +3,12 @@ const Cart = require("../models/cartModel");
 const Coupon = require("../models/couponModel");
 const Order = require("../models/orderModel");
 const expressAsyncHandler = require("express-async-handler");
-const { generateAccessToken } = require("../config/accessToken");
 const validateMongodbId = require("../utils/validateMongodbId");
-const { generateRefreshToken } = require("../config/refreshToken");
 const crypto = require("crypto");
-const jwt = require("jsonwebtoken");
 const sendEmail = require("../controllers/emailCtrl");
 const emailValidator = require("email-validator");
 const validatePassword = require("../utils/validatePassword");
 const redis = require("../utils/redis");
-
-// Register a new user.
-const registerUser = expressAsyncHandler(async (req, res) => {
-  try {
-    const { firstName, lastName, email, phoneNumber, password } = req.body;
-    if (!firstName || !lastName || !email || !phoneNumber || !password) {
-      throw new Error("Please fill in all the required fields.");
-    }
-    const phoneRegex = /^\+?[0-9]\d{1,14}$/;
-    if (!phoneRegex.test(phoneNumber)) {
-      throw new Error("Please provide a valid phone number.");
-    }
-    validatePassword(password);
-    if (!emailValidator.validate(email)) {
-      throw new Error("Please provide a valid email address.");
-    }
-    const user = await User.findOne({ email });
-    if (user) {
-      throw new Error(
-        "This email address is already associated with an account. Please double check your email address and try again."
-      );
-    }
-    const createdUser = await User.create({ ...req.body, role: "user" });
-    // send an email confirmation for account creation.
-    if (createdUser) {
-      const accountConfirmation = `Hello ${
-        createdUser?.firstName.charAt(0).toUpperCase() +
-        createdUser?.firstName.slice(1)
-      }, Thank you for registering with Zeenet e-commerce. If you did not create an account, please ignore this email.`;
-      const data = {
-        to: createdUser?.email,
-        subject: "Account Confirmation",
-        text: "Zeenet e-commerce",
-        html: accountConfirmation,
-      };
-      await sendEmail(data);
-    }
-    // return user without password.
-    const userWithoutPassword = await User.findById(createdUser?._id).select(
-      "-password"
-    );
-    res.status(200).json(userWithoutPassword);
-  } catch (error) {
-    throw new Error(error);
-  }
-});
-
-const registerAdmin = expressAsyncHandler(async (req, res) => {
-  try {
-    const { firstName, lastName, email, phoneNumber, password } = req.body;
-    if (!firstName || !lastName || !email || !phoneNumber || !password) {
-      throw new Error("Please fill in all the required fields.");
-    }
-    const phoneRegex = /^\+?[0-9]\d{1,14}$/;
-    if (!phoneRegex.test(phoneNumber)) {
-      throw new Error("Please provide a valid phone number.");
-    }
-    validatePassword(password);
-    if (!emailValidator.validate(email)) {
-      throw new Error("Please provide a valid email address.");
-    }
-    const user = await User.findOne({ email });
-    if (user) {
-      throw new Error(
-        "This email address is already associated with an account. Please double check your email address and try again."
-      );
-    }
-    const createdUser = await User.create({ ...req.body, role: "admin" });
-    // send an email confirmation for account creation.
-    if (createdUser) {
-      const accountConfirmation = `Hello ${
-        createdUser?.firstName.charAt(0).toUpperCase() +
-        createdUser?.firstName.slice(1)
-      }, Thank you for registering with Zeenet e-commerce. If you did not create an account, please ignore this email.`;
-      const data = {
-        to: createdUser?.email,
-        subject: "Account Confirmation",
-        text: "Zeenet e-commerce",
-        html: accountConfirmation,
-      };
-      await sendEmail(data);
-    }
-    // return user without password.
-    const userWithoutPassword = await User.findById(createdUser?._id).select(
-      "-password"
-    );
-    res.status(200).json(userWithoutPassword);
-  } catch (error) {
-    throw new Error(error);
-  }
-});
-
-// Signin user
-const signInUser = expressAsyncHandler(async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    if (!email || !password) {
-      throw new Error("Please fill in all the required fields.");
-    }
-    if (!emailValidator.validate(email)) {
-      throw new Error("Please provide a valid email address.");
-    }
-    validatePassword(password);
-    const user = await User.findOne({ email }).select("+password");
-    if (user.role === "admin") {
-      throw new Error("Not authorised.");
-    }
-    if (!user) {
-      throw new Error(
-        "We couldn't find an account associated with this email address. Please check the email and try again."
-      );
-    }
-    if (user && !(await user.isPasswordMatched(password))) {
-      throw new Error("Wrong email or password.");
-    }
-    const accessToken = generateAccessToken(user._id);
-    const refreshToken = generateRefreshToken(user._id);
-    user.refreshToken = refreshToken;
-    await user.save();
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: false,
-      sameSite: "strict",
-      maxAge: parseInt(process.env.REFRESH_TOKEN_MAX_AGE),
-    });
-    res.status(200).json({
-      firstName: user?.firstName,
-      lastName: user?.lastName,
-      email: user?.email,
-      phoneNumber: user?.phoneNumber,
-      avatar: user?.avatar,
-      accessToken: accessToken,
-    });
-  } catch (error) {
-    throw new Error(error);
-  }
-});
-
-//Sign in admin
-const adminSignIn = expressAsyncHandler(async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    if (!email || !password) {
-      throw new Error("Please fill in all the required fields.");
-    }
-    validatePassword(password);
-    if (!emailValidator.validate(email)) {
-      throw new Error("Please provide a valid email address.");
-    }
-    const user = await User.findOne({ email }).select("+password");
-    if (!user) {
-      throw new Error("User not found.");
-    }
-    if (user.role !== "admin") {
-      throw new Error("Not authorised.");
-    }
-    if (!(await user.isPasswordMatched(password))) {
-      throw new Error("Wrong email or password.");
-    }
-    const accessToken = generateAccessToken(user._id);
-    const refreshToken = generateRefreshToken(user._id);
-    user.refreshToken = refreshToken;
-    await user.save();
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: false,
-      sameSite: "strict",
-      maxAge: parseInt(process.env.REFRESH_TOKEN_MAX_AGE),
-    });
-    res.status(200).json({
-      firstName: user.firstName,
-      email: user.email,
-      avatar: user.avatar,
-      accessToken: accessToken,
-    });
-  } catch (error) {
-    throw new Error(error);
-  }
-});
-
-const handleRefreshToken = expressAsyncHandler(async (req, res) => {
-  try {
-    const cookie = req.cookies;
-    if (!cookie.refreshToken) {
-      // if there is not token in cookies this means that the user had already logged out or the refresh token has expired from the cookies
-      // The user should log in again to get a new access token
-      throw new Error("Session expired. Please log in to proceed.");
-    }
-    const refreshToken = cookie.refreshToken;
-    const user = await User.findOne({ refreshToken });
-    if (!user) {
-      throw new Error(
-        "We could not find a user associated with this refresh token."
-      );
-    }
-    jwt.verify(refreshToken, process.env.JWT_SECRET, (err, decoded) => {
-      if (err || user.id !== decoded.id) {
-        throw new Error("Invalid refresh token. Please login to proceed.");
-      }
-      const accessToken = generateAccessToken(user._id);
-      req.user = user;
-      return accessToken;
-    });
-  } catch (error) {
-    throw new Error(error);
-  }
-});
-
-const logout = expressAsyncHandler(async (req, res) => {
-  try {
-    const cookie = req.cookies;
-    if (!cookie.refreshToken) {
-      throw new Error("No refresh token in cookies.");
-    }
-    const refreshToken = cookie.refreshToken;
-    const user = await User.findOne({ refreshToken });
-    if (!user) {
-      res.clearCookie("refreshToken", {
-        sameSite: "strict",
-        httpOnly: true,
-        secure: false,
-      });
-      return res
-        .status(200)
-        .json({ message: "You have sucessfully logged out." });
-    }
-    await User.findOneAndUpdate(
-      { refreshToken },
-      {
-        refreshToken: "",
-      }
-    );
-    res.clearCookie("refreshToken", {
-      httpOnly: true,
-      secure: false,
-      sameSite: "strict",
-    });
-    res.status(200).json({ message: "You have succefully logged out." });
-  } catch (error) {
-    throw new Error(error);
-  }
-});
 
 const updateAUser = expressAsyncHandler(async (req, res) => {
   try {
@@ -361,7 +116,7 @@ const blockUser = expressAsyncHandler(async (req, res) => {
     }
     res.status(200).json({
       blockedUser,
-      message: "User is blocked and can not make purchases.",
+      message: "User  blocked and cannot make purchases",
     });
   } catch (error) {
     throw new Error(error);
@@ -382,9 +137,9 @@ const unBlockUser = expressAsyncHandler(async (req, res) => {
     if (!unblockedUser) {
       throw new Error("User not found.");
     }
-    res.status(204).json({
+    res.status(200).json({
       unblockedUser,
-      message: "User has been unblocked and can now make purchases.",
+      message: "User unblocked and can now make purchases.",
     });
   } catch (error) {
     throw new Error(error);
@@ -643,6 +398,7 @@ const createOrder = expressAsyncHandler(async (req, res) => {
 const getUserOrders = expressAsyncHandler(async (req, res) => {
   try {
     const { _id } = req.user;
+    validateMongodbId(_id);
     const cacheKey = `order:${_id}`;
     const cachedOrder = await redis.get(cacheKey);
     if (cachedOrder) {
@@ -802,20 +558,15 @@ const getYearlyOrders = expressAsyncHandler(async (req, res) => {
 });
 
 module.exports = {
-  registerUser,
-  signInUser,
   getAllUsers,
   getAUser,
   deleteAUser,
   updateAUser,
   blockUser,
   unBlockUser,
-  handleRefreshToken,
-  logout,
   updatePassword,
   resetUserPasswordToken,
   resetPassword,
-  adminSignIn,
   getWishlist,
   adddProductToCart,
   getUserCart,
@@ -828,5 +579,4 @@ module.exports = {
   getASingleOrder,
   updateOrderStatus,
   resetAdminPasswordToken,
-  registerAdmin,
 };

@@ -1,7 +1,8 @@
 const User = require("../models/userModel");
 const jwt = require("jsonwebtoken");
 const asyncHandler = require("express-async-handler");
-const { handleRefreshToken } = require("../controllers/userCtrl");
+const { refreshAccessToken } = require("../controllers/authCtrl");
+const validateMongodbId = require("../utils/validateMongodbId");
 
 const authMiddleware = asyncHandler(async (req, res, next) => {
   try {
@@ -25,7 +26,7 @@ const authMiddleware = asyncHandler(async (req, res, next) => {
       error.name === "JsonWebTokenError"
     ) {
       try {
-        const newAccessToken = await handleRefreshToken(req, res);
+        const newAccessToken = await refreshAccessToken(req, res);
         req.headers.authorization = `Bearer ${newAccessToken}`;
         next();
       } catch (error) {
@@ -41,16 +42,30 @@ const authMiddleware = asyncHandler(async (req, res, next) => {
 
 const isAdmin = asyncHandler(async (req, res, next) => {
   try {
-    const { email } = req.user;
-    if (!email) {
-      throw new Error("User does not have an email.");
-    }
-    const adminUser = await User.findOne({ email });
-    if (!adminUser) {
+    const { _id } = req.user;
+    const user = await User.findOne(_id);
+    if (!user) {
       throw new Error("User not found.");
     }
-    if (adminUser.role !== "admin") {
+    if (user.role === "admin") {
+      next();
+    } else {
       throw new Error("Not authorised.");
+    }
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
+const isBlocked = asyncHandler(async (req, res, next) => {
+  try {
+    const { email } = req.user;
+    const user = await User.findOne(email);
+    if (!user) {
+      throw new Error("User not found.");
+    }
+    if (user.isBlocked) {
+      throw new Error("Account associated with this email is blocked.");
     } else {
       next();
     }
@@ -59,4 +74,4 @@ const isAdmin = asyncHandler(async (req, res, next) => {
   }
 });
 
-module.exports = { authMiddleware, isAdmin };
+module.exports = { authMiddleware, isAdmin, isBlocked };

@@ -39,6 +39,7 @@ app.use(cookieParser());
 app.use(morgan("dev"));
 
 // Import and setup routes
+const authRouter = require("./routes/authRoute")
 const userRouter = require("./routes/userRoute");
 const productRouter = require("./routes/productRoutes");
 const blogRouter = require("./routes/blogRoute");
@@ -55,6 +56,7 @@ const countyRouter = require("./routes/countyRoute");
 const deliveryAddressRouter = require("./routes/deliveryAddressRoute");
 const paymentRoute = require("./routes/paymentRoute");
 
+app.use("/api/auth",authRouter)
 app.use("/api/user", userRouter);
 app.use("/api/products", productRouter);
 app.use("/api/blog", blogRouter);

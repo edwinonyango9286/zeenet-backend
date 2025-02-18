@@ -9,7 +9,7 @@ const deliveryStationSchema = new mongoose.Schema(
       index: true,
       trim: true,
       minlength: [2, "Name must be atleast 2 characters long."],
-      maxlength: [32, "Name must be atmost 32 characters long."],
+      maxlength: [72, "Name must be atmost 72 characters long."],
     },
   },
   { timestamps: true }

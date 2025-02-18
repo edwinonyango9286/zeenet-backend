@@ -13,7 +13,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: [true, "First name is required."],
       minlength: [2, "First name must be atleast 2 characters long."],
-      maxlength: [32, "Last name must be atmost 32 characters long."],
+      maxlength: [72, "Last name must be atmost 72 characters long."],
       trim: true,
       index: true,
     },
@@ -21,7 +21,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: [true, "Last name is required."],
       minlength: [2, "Last name must be at least 2 characters long."],
-      maxlength: [32, "Last name must be at most 32 characters long."],
+      maxlength: [72, "Last name must be at most 72 characters long."],
       trim: true,
       index: true,
     },
@@ -31,7 +31,7 @@ const userSchema = new mongoose.Schema(
       unique: true,
       lowercase: true,
       minlength: [2, "Email must be at least 2 characters long."],
-      maxlength: [32, "Email must be at most 32 characters long."],
+      maxlength: [72, "Email must be at most 72 characters long."],
       trim: true,
       match: [/.+\@.+\..+/, "Please provide a valid email address"],
       index: true,
@@ -39,6 +39,7 @@ const userSchema = new mongoose.Schema(
     phoneNumber: {
       type: String,
       required: [true, "Phone number is required."],
+      maxlength: [15, "Phone number must not exceed 15 characters."],
       unique: true,
       trim: true,
       match: [/^\+?[0-9]\d{1,14}$/, "Please provide a valid phone number"],
@@ -56,23 +57,52 @@ const userSchema = new mongoose.Schema(
       trim: true,
       select: false,
     },
+
     role: {
       type: String,
       enum: ["user", "admin"],
     },
+
     isBlocked: {
       type: Boolean,
       default: false,
     },
-    cart: {
-      type: Array,
-      default: [],
-    },
+
+    // contains products
+    cart: [
+      {
+        type: ObjectId,
+        ref: "Product",
+        default: [],
+        validate: {
+          validator: function (v) {
+            return ObjectId.isValid(v);
+          },
+          message: "Invalid delivery address ID.",
+        },
+      },
+    ],
+
+    type: Array,
+    default: [],
+    orders: [
+      {
+        type: ObjectId,
+        ref: "Order",
+        default: [],
+        validate: {
+          validator: function (v) {
+            return ObjectId.isValid(v);
+          },
+          message: "Invalid delivery address ID.",
+        },
+      },
+    ],
     deliveryAddress: [
       {
         type: ObjectId,
         ref: "DeliveryAddress",
-        trim: true,
+        default: [],
         validate: {
           validator: function (v) {
             return ObjectId.isValid(v);
@@ -85,7 +115,7 @@ const userSchema = new mongoose.Schema(
       {
         type: ObjectId,
         ref: "Product",
-        trim: true,
+        default: [],
         validate: {
           validator: function (v) {
             return ObjectId.isValid(v);
@@ -96,10 +126,8 @@ const userSchema = new mongoose.Schema(
     ],
     refreshToken: {
       type: String,
-      require: false,
       unique: true,
       sparse: true,
-      trim: true,
     },
     passwordChangedAt: Date,
     passwordResetToken: String,

@@ -9,7 +9,7 @@ const brandSchema = new mongoose.Schema(
       index: true,
       trim: true,
       minlength: [2, "Title must be atleast 2 characters long."],
-      maxlength: [32, "Title must be atmost 32 characters long."],
+      maxlength: [72, "Title must be atmost 72 characters long."],
     },
   },
   { timestamps: true }

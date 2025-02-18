@@ -9,16 +9,24 @@ const countrySchema = new mongoose.Schema(
       index: true,
       trim: true,
       minlength: [2, "Name must be atleast 2 characters long."],
-      maxlength: [32, "Name must be atmost 32 characters long."],
+      maxlength: [72, "Name must be atmost 72 characters long."],
       match: [
         /^[a-zA-Z0-9\s]+$/,
         "Name can only contain alphanumeric characters and spaces.",
       ],
     },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
+    deletedAt: {
+      type: Date,
+      default: null,
+    },
   },
+
   { timestamps: true }
 );
-
 countrySchema.pre("save", function (next) {
   this.name = this.name.replace(/\b\w/g, (char) => char.toUpperCase());
   next();

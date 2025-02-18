@@ -16,6 +16,7 @@ const createABlogCategory = expressAsyncHandler(async (req, res) => {
   }
 });
 
+// When updating consider  data in the redis
 const updateABlogCategory = expressAsyncHandler(async (req, res) => {
   try {
     const { title } = req.body;
@@ -76,6 +77,36 @@ const getABlogCategory = expressAsyncHandler(async (req, res) => {
 
 const getAllBlogCategories = expressAsyncHandler(async (req, res) => {
   try {
+    const queryObject = { ...req.query };
+    const excludeFields = ["page", "sort", "limit", "offset", "fields"];
+    excludeFields.forEach((el) => delete queryObject[el]);
+
+    queryObject.isDeleted = false;
+    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
+
+    let query = BlogCategory.find(JSON.parse(queryStr));
+
+
+    // sorting 
+    if (req.query.sort) {
+      const sortBy = req.query.sort.split(",").join(" ");
+      query = query.sort(sortBy);
+    } else {
+      query = query.sort("-createdAt");
+    }
+
+
+    // field limiting
+    if (req.query.fields) {
+      const fields = req.query.fields.split(",").join(" ");
+      query = query.select(fields);
+    } else {
+      query = query.select("-__v");
+    }
+
+
+
+
     const cacheKey = `blogCategories`;
     const cachedBlogCategories = await redis.get(cacheKey);
     if (cachedBlogCategories) {

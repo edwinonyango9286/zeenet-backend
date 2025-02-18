@@ -4,6 +4,7 @@ const expressAsyncHandler = require("express-async-handler");
 const slugify = require("slugify");
 const validateMongodbId = require("../utils/validateMongodbId");
 const redis = require("../utils/redis");
+const cron = require("node-cron");
 
 const createProduct = expressAsyncHandler(async (req, res) => {
   try {
@@ -67,7 +68,6 @@ const updateProduct = expressAsyncHandler(async (req, res) => {
     }
     const { id } = req.params;
     validateMongodbId(id);
-
     if (title) {
       req.body.slug = slugify(title);
     }
@@ -83,15 +83,23 @@ const updateProduct = expressAsyncHandler(async (req, res) => {
   }
 });
 
-
+//  delete a product => soft deletion
 const deleteProduct = expressAsyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
     validateMongodbId(id);
-    const deletedProduct = await Product.findOneAndDelete({ _id: id });
+    const deletedProduct = await Product.findByIdAndUpdate(
+      id,
+      {
+        isDeleted: true,
+        deletedAt: new Date(),
+      },
+      { new: true }
+    );
     if (!deletedProduct) {
       throw new Error("Product not found.");
     }
+
     const cacheKey = `product:${id}`;
     await redis.del(cacheKey);
     const productsCacheKeys = await redis.keys("products:*");
@@ -103,8 +111,6 @@ const deleteProduct = expressAsyncHandler(async (req, res) => {
     throw new Error(error);
   }
 });
-
-
 
 const getaProduct = expressAsyncHandler(async (req, res) => {
   try {
@@ -128,16 +134,20 @@ const getaProduct = expressAsyncHandler(async (req, res) => {
   }
 });
 
-
 const getallProducts = expressAsyncHandler(async (req, res) => {
   try {
     const queryObject = { ...req.query };
+
+    // Exclude fields for pagination, sorting, etc.
     const excludeFields = ["page", "sort", "limit", "offset", "fields"];
     excludeFields.forEach((el) => delete queryObject[el]);
 
+    // Add condition to filter out deleted products
+    queryObject.isDeleted = false;
     let queryStr = JSON.stringify(queryObject);
     queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
 
+    // Create the query
     let query = Product.find(JSON.parse(queryStr))
       .populate("category")
       .populate("brand");
@@ -149,6 +159,7 @@ const getallProducts = expressAsyncHandler(async (req, res) => {
     } else {
       query = query.sort("-createdAt");
     }
+
     // Field limiting
     if (req.query.fields) {
       const fields = req.query.fields.split(",").join(" ");
@@ -156,11 +167,13 @@ const getallProducts = expressAsyncHandler(async (req, res) => {
     } else {
       query = query.select("-__v");
     }
+
     // Pagination
     const limit = parseInt(req.query.limit, 10) || 20;
     const offset = parseInt(req.query.offset, 10) || 0;
     query = query.skip(offset).limit(limit);
 
+    // Caching
     const cacheKey = `products:${JSON.stringify(queryObject)}:${
       req.query.sort
     }:${req.query.fields}:${limit}:${offset}`;
@@ -168,13 +181,15 @@ const getallProducts = expressAsyncHandler(async (req, res) => {
     if (cachedProducts) {
       return res.status(200).json(JSON.parse(cachedProducts));
     }
+
     const products = await query;
-    await redis.set(cacheKey, JSON.stringify(products), "EX",2);
+    await redis.set(cacheKey, JSON.stringify(products), "EX", 2);
     res.status(200).json(products);
   } catch (error) {
     throw new Error(error);
   }
 });
+
 
 
 const addToWishlist = expressAsyncHandler(async (req, res) => {

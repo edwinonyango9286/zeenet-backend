@@ -12,7 +12,7 @@ const blogSchema = new mongoose.Schema(
       trim: true,
       index: true,
       minlength: [2, "Title must be atleast 2 characters long."],
-      maxlength: [50, "Title must be atmost 50 characters long."],
+      maxlength: [72, "Title must be atmost 72 characters long."],
     },
     description: {
       type: String,

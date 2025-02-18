@@ -11,7 +11,6 @@ const productSchema = new mongoose.Schema(
       required: [true, "Title is required."],
       trim: true,
       minlength: [2, "Title must be at least 2 characters long."],
-      maxlength: [32, "Title must be at most 32 characters long."],
       index: true,
     },
     slug: {
@@ -23,7 +22,7 @@ const productSchema = new mongoose.Schema(
       type: String,
       required: [true, "Description is required."],
       minlength: [2, "Description must be at least 2 characters long."],
-      maxlength: [2000, "Description must be at most 2000 characters long."],
+      maxlength: [10000, "Description must be at most 2000 characters long."],
       trim: true,
       index: true,
     },
@@ -126,6 +125,14 @@ const productSchema = new mongoose.Schema(
     totalRating: {
       type: String,
       default: 4,
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
+    deletedAt: {
+      type: Date,
+      default: null,
     },
   },
   { timestamps: true }
