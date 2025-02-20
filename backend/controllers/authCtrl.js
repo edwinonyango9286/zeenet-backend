@@ -6,6 +6,8 @@ const { generateAccessToken } = require("../config/accessToken");
 const { generateRefreshToken } = require("../config/refreshToken");
 const jwt = require("jsonwebtoken");
 const emailValidator = require("email-validator");
+const ejs = require("ejs");
+const path = require("path");
 
 //register customer
 const registerUser = expressAsyncHandler(async (req, res) => {
@@ -31,15 +33,23 @@ const registerUser = expressAsyncHandler(async (req, res) => {
     const createdUser = await User.create({ ...req.body, role: "user" });
     // send an email confirmation for account creation.
     if (createdUser) {
-      const accountConfirmation = `Hello ${
-        createdUser?.firstName.charAt(0).toUpperCase() +
-        createdUser?.firstName.slice(1)
-      }, Thank you for registering with Zeenet e-commerce. If you did not create an account, please ignore this email.`;
+      const userData = {
+        createdUser: {
+          name: `${firstName} ${lastName}`,
+        },
+      };
+      const html = await ejs.renderFile(
+        path.join(
+          __dirname,
+          "../mail-templates/accountCreationConfirmation.ejs"
+        ),
+        userData
+      );
       const data = {
         to: createdUser?.email,
-        subject: "Account Confirmation",
+        subject: "Account creation confirmation",
         text: "Zeenet e-commerce",
-        html: accountConfirmation,
+        html: html,
       };
       await sendEmail(data);
     }
@@ -47,7 +57,11 @@ const registerUser = expressAsyncHandler(async (req, res) => {
     const userWithoutPassword = await User.findById(createdUser?._id).select(
       "-password"
     );
-    res.status(200).json(userWithoutPassword);
+    return res.status(200).json({
+      status: "SUCCESS",
+      message: "Account created successfully.",
+      data: userWithoutPassword,
+    });
   } catch (error) {
     throw new Error(error);
   }
@@ -76,16 +90,23 @@ const registerAdmin = expressAsyncHandler(async (req, res) => {
     }
     const createdUser = await User.create({ ...req.body, role: "admin" });
     // send an email confirmation for account creation.
+
     if (createdUser) {
-      const accountConfirmation = `Hello ${
-        createdUser?.firstName.charAt(0).toUpperCase() +
-        createdUser?.firstName.slice(1)
-      }, Thank you for registering with Zeenet e-commerce. If you did not create an account, please ignore this email.`;
+      const userData = {
+        createdUser: { name: `${firstName} ${lastName}` },
+      };
+      const html = await ejs.renderFile(
+        path.join(
+          __dirname,
+          "../mail-templates/accountCreationConfirmation.ejs"
+        ),
+        userData
+      );
       const data = {
         to: createdUser?.email,
-        subject: "Account Confirmation",
+        subject: "Account creation confirmation",
         text: "Zeenet e-commerce",
-        html: accountConfirmation,
+        html: html,
       };
       await sendEmail(data);
     }
@@ -93,7 +114,11 @@ const registerAdmin = expressAsyncHandler(async (req, res) => {
     const userWithoutPassword = await User.findById(createdUser?._id).select(
       "-password"
     );
-    res.status(200).json(userWithoutPassword);
+    return res.status(201).json({
+      status: "SUCCESS",
+      message: "Account created successfully.",
+      data: userWithoutPassword,
+    });
   } catch (error) {
     throw new Error(error);
   }
@@ -249,7 +274,6 @@ const logout = expressAsyncHandler(async (req, res) => {
     throw new Error(error);
   }
 });
-
 
 module.exports = {
   registerUser,

@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const enquirySchema = new mongoose.Schema(
   {
-    name: {
+    sentBy: {
       type: String,
       required: [true, "Enquiry Name is required."],
       trim: true,
@@ -19,14 +19,15 @@ const enquirySchema = new mongoose.Schema(
       trim: true,
       match: [/.+\@.+\..+/, "Please provide a valid email address"],
     },
+
     phoneNumber: {
       type: String,
       required: [true, "Phone Number is required."],
       trim: true,
-      maxlength:[15, "Phone number must not exceed 15 characters."],
+      maxlength: [15, "Phone number must not exceed 15 characters."],
       match: [/^\+?[0-9]\d{1,14}$/, "Please provide a valid phone number."],
     },
-    enquiry: {
+    enquiryBody: {
       type: String,
       required: true,
       minlength: [2, "Enquiry must be atleast 2 characters long."],
@@ -37,6 +38,14 @@ const enquirySchema = new mongoose.Schema(
       type: String,
       default: "Submitted",
       enum: ["Submitted", "Contacted", "In Progress", "Resolved"],
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
+    deletedAt: {
+      type: Date,
+      default: null,
     },
   },
   {

@@ -6,11 +6,27 @@ const {
 
 const productSchema = new mongoose.Schema(
   {
-    title: {
+    addedBy: {
+      type: ObjectId,
+      ref: "User",
+      required: true,
+      validate: {
+        validator: (id) => {
+          return ObjectId.isValid(id);
+        },
+        message: "Invalid user Id.",
+      },
+    },
+    productCode: {
+      type: String,
+      required: [true, "Product code is required."],
+    },
+    name: {
       type: String,
       required: [true, "Title is required."],
       trim: true,
       minlength: [2, "Title must be at least 2 characters long."],
+      maxlength: [100, "Description must be at most 100 characters long"],
       index: true,
     },
     slug: {
@@ -22,13 +38,25 @@ const productSchema = new mongoose.Schema(
       type: String,
       required: [true, "Description is required."],
       minlength: [2, "Description must be at least 2 characters long."],
-      maxlength: [10000, "Description must be at most 2000 characters long."],
+      maxlength: [2000, "Description must be at most 2000 characters long."],
       trim: true,
       index: true,
     },
-    price: {
+    shortDescription: {
+      type: String,
+      requiredL: [true, "Product short description is required."],
+      minlength: [2, "Description must be at least 2 characters long."],
+      maxlength: [500, "Description must be at most 500 characters long."],
+      trim: true,
+      index: true,
+    },
+    currentPrice: {
       type: Number,
       required: [true, "Price is required."],
+      min: [0, "Price must be a positive number."],
+    },
+    oldPrice: {
+      type: Number,
       min: [0, "Price must be a positive number."],
     },
     category: {
@@ -37,8 +65,8 @@ const productSchema = new mongoose.Schema(
       ref: "ProductCategory",
       trim: true,
       validate: {
-        validator: function (v) {
-          return ObjectId.isValid(v);
+        validator: (id) => {
+          return ObjectId.isValid(id);
         },
         message: "Invalid category ID.",
       },
@@ -49,8 +77,8 @@ const productSchema = new mongoose.Schema(
       ref: "Brand",
       trim: true,
       validate: {
-        validator: function (v) {
-          return ObjectId.isValid(v);
+        validator: (id) => {
+          return ObjectId.isValid(id);
         },
         message: "Invalid brand ID.",
       },
@@ -64,11 +92,6 @@ const productSchema = new mongoose.Schema(
       type: Number,
       default: 0,
       min: [0, "Sold quantity cannot be negative."],
-    },
-    screenSize: {
-      type: Number,
-      trim: true,
-      min: [0, "Screen size cannot be negative."],
     },
     images: {
       type: [
@@ -84,7 +107,7 @@ const productSchema = new mongoose.Schema(
         },
       ],
       validate: {
-        validator: function (v) {
+        validator: (v) => {
           return v.length > 0;
         },
         message: "At least one image is required.",
@@ -114,8 +137,8 @@ const productSchema = new mongoose.Schema(
           trim: true,
           required: [true, "Please login to proceed."],
           validate: {
-            validator: function (v) {
-              return ObjectId.isValid(v);
+            validator: (id) => {
+              return ObjectId.isValid(id);
             },
             message: "Invalid user ID.",
           },
@@ -124,7 +147,7 @@ const productSchema = new mongoose.Schema(
     ],
     totalRating: {
       type: String,
-      default: 4,
+      default: 0,
     },
     isDeleted: {
       type: Boolean,
@@ -134,12 +157,21 @@ const productSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    visibility: {
+      type: String,
+      enum: ["Published", "Scheduled", "Hidden"],
+      default: "Published",
+    },
+    publishedDate: {
+      type: Date,
+      default: Date.now(),
+    },
   },
   { timestamps: true }
 );
 
-productSchema.pre("save", function (next) {
-  this.title = this.title.replace(/\b\w/g, (char) => char.toUpperCase());
+productSchema.pre("save", (next) => {
+  this.name = this.name.replace(/\b\w/g, (char) => char.toUpperCase());
   next();
 });
 

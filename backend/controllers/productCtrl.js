@@ -5,13 +5,28 @@ const slugify = require("slugify");
 const validateMongodbId = require("../utils/validateMongodbId");
 const redis = require("../utils/redis");
 const cron = require("node-cron");
+const { v4: uuidv4 } = require("uuid");
+const crypto = require("crypto");
+
+// Generate productId
+const generateProductCode = (prefix) => {
+  const productCode = uuidv4();
+  const hash = crypto.createHash("sha256").update(productCode).digest("hex");
+  const shortProductCode = hash.substring(0, 8);
+  return console.log(`${prefix}-${shortProductCode}`);
+};
 
 const createProduct = expressAsyncHandler(async (req, res) => {
   try {
+    const { _id } = req.user;
+    validateMongodbId(_id);
+
     const {
-      title,
+      name,
       description,
-      price,
+      shortDescription,
+      currentPrice,
+      oldPrice,
       category,
       brand,
       quantity,
@@ -20,22 +35,31 @@ const createProduct = expressAsyncHandler(async (req, res) => {
     } = req.body;
     //Input validation
     if (
-      !title ||
+      !name ||
       !description ||
-      !price ||
+      !shortDescription ||
+      !currentPrice ||
+      !oldPrice ||
       !category ||
       !brand ||
       !quantity ||
       !images ||
       !tags
     ) {
-      throw new Error("Please fill in all the required fields");
+      throw new Error("Please fill in all the required fields.");
     }
-    if (title) {
-      req.body.slug = slugify(title);
-    }
-    const newProduct = await Product.create(req.body);
-    res.status(201).json(newProduct);
+    const newProduct = await Product.create({
+      ...req.body,
+      slug: slugify(name),
+      addedBy: _id,
+      productCode: generateProductCode("PROD"),
+    });
+
+    return res.status(201).json({
+      status: "SUCCESS",
+      message: "Product added successfully.",
+      newProduct,
+    });
   } catch (error) {
     throw new Error(error);
   }
@@ -44,9 +68,11 @@ const createProduct = expressAsyncHandler(async (req, res) => {
 const updateProduct = expressAsyncHandler(async (req, res) => {
   try {
     const {
-      title,
+      name,
       description,
-      price,
+      shortDescription,
+      currentPrice,
+      oldPrice,
       category,
       brand,
       quantity,
@@ -55,9 +81,10 @@ const updateProduct = expressAsyncHandler(async (req, res) => {
     } = req.body;
     //Input validation
     if (
-      !title ||
+      !name ||
       !description ||
-      !price ||
+      !currentPrice ||
+      !shortDescription ||
       !category ||
       !brand ||
       !quantity ||
@@ -66,6 +93,7 @@ const updateProduct = expressAsyncHandler(async (req, res) => {
     ) {
       throw new Error("Please fill in all the required fields");
     }
+
     const { id } = req.params;
     validateMongodbId(id);
     if (title) {
@@ -137,7 +165,6 @@ const getaProduct = expressAsyncHandler(async (req, res) => {
 const getallProducts = expressAsyncHandler(async (req, res) => {
   try {
     const queryObject = { ...req.query };
-
     // Exclude fields for pagination, sorting, etc.
     const excludeFields = ["page", "sort", "limit", "offset", "fields"];
     excludeFields.forEach((el) => delete queryObject[el]);
@@ -189,8 +216,6 @@ const getallProducts = expressAsyncHandler(async (req, res) => {
     throw new Error(error);
   }
 });
-
-
 
 const addToWishlist = expressAsyncHandler(async (req, res) => {
   try {
