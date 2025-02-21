@@ -11,6 +11,7 @@ const crypto = require("crypto");
 // Generate productId
 const generateProductCode = (prefix) => {
   const productCode = uuidv4();
+
   const hash = crypto.createHash("sha256").update(productCode).digest("hex");
   const shortProductCode = hash.substring(0, 8);
   return console.log(`${prefix}-${shortProductCode}`);
@@ -20,7 +21,6 @@ const createProduct = expressAsyncHandler(async (req, res) => {
   try {
     const { _id } = req.user;
     validateMongodbId(_id);
-
     const {
       name,
       description,
@@ -32,6 +32,7 @@ const createProduct = expressAsyncHandler(async (req, res) => {
       quantity,
       images,
       tags,
+      color,
     } = req.body;
     //Input validation
     if (
@@ -44,7 +45,8 @@ const createProduct = expressAsyncHandler(async (req, res) => {
       !brand ||
       !quantity ||
       !images ||
-      !tags
+      !tags ||
+      !color
     ) {
       throw new Error("Please fill in all the required fields.");
     }
@@ -54,7 +56,6 @@ const createProduct = expressAsyncHandler(async (req, res) => {
       addedBy: _id,
       productCode: generateProductCode("PROD"),
     });
-
     return res.status(201).json({
       status: "SUCCESS",
       message: "Product added successfully.",

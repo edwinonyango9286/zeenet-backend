@@ -2,7 +2,6 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 
 const {
-  Schema,
   Types: { ObjectId },
 } = require("mongoose");
 const crypto = require("crypto");
@@ -67,7 +66,6 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-
     // contains products
     cart: [
       {
@@ -132,6 +130,12 @@ const userSchema = new mongoose.Schema(
     passwordChangedAt: Date,
     passwordResetToken: String,
     passwordResetExpires: Date,
+
+    userType: {
+      type: String,
+      enum: ["Wholesaler", "Default"],
+      default: "Default",
+    },
   },
 
   { timestamps: true }

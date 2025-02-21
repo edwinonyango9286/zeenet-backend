@@ -85,15 +85,16 @@ const deleteBrand = expressAsyncHandler(async (req, res) => {
   }
 });
 
+// this should not return a deleted brand
 const getBrand = expressAsyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
     validateMongodbId(id);
-    const brand = await Brand.findById(id);
+    const brand = await Brand.findOne({ _id: id, isDeleted: false });
     if (!brand) {
       throw new Error("Brand not found.");
     }
-    res.status(200).json(brand);
+    res.status(200).json({ status: "SUCCESS", data: brand });
   } catch (error) {
     throw new Error(error);
   }

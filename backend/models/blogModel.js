@@ -1,18 +1,37 @@
 const mongoose = require("mongoose");
 const {
-  Schema,
   Types: { ObjectId },
 } = require("mongoose");
 
 const blogSchema = new mongoose.Schema(
   {
-    title: {
+    createdBy: {
+      type: ObjectId,
+      ref: "User",
+      required: true,
+      validate: {
+        validator: (id) => {
+          return ObjectId.isValid(id);
+        },
+        message: "Invalid object id.",
+      },
+    },
+
+    name: {
       type: String,
-      required: [true, "Title is required."],
+      required: [true, "Name is required."],
       trim: true,
       index: true,
-      minlength: [2, "Title must be atleast 2 characters long."],
-      maxlength: [72, "Title must be atmost 72 characters long."],
+      minlength: [2, "Name must be atleast 2 characters long."],
+      maxlength: [72, "Name must be atmost 72 characters long."],
+    },
+    shortDescription: {
+      type: String,
+      required: [true, "Description is required."],
+      minlength: [2, "Short description must be atleast 2 characters long."],
+      maxlength: [500, "Short description must be atmost 500 characters long."],
+      trim: true,
+      index: true,
     },
     description: {
       type: String,
@@ -98,6 +117,23 @@ const blogSchema = new mongoose.Schema(
         message: "At least one image is required.",
       },
     },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
+    deletedAt: {
+      type: Date,
+      default: null,
+    },
+    pusblishedAt: {
+      type: Date,
+      default: Date.now(),
+    },
+    visibility: {
+      type: String,
+      enum: ["Hidden", "Published", "Scheduled"],
+      default: "Published",
+    },
   },
   {
     toJSON: {
@@ -111,7 +147,7 @@ const blogSchema = new mongoose.Schema(
 );
 
 blogSchema.pre("save", function (next) {
-  this.title = this.title.replace(/\b\w/g, (char) => char.toUpperCase());
+  this.name = this.name.replace(/\b\w/g, (char) => char.toUpperCase());
   next();
 });
 

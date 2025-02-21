@@ -286,12 +286,15 @@ const getWishlist = expressAsyncHandler(async (req, res) => {
 
 const adddProductToCart = expressAsyncHandler(async (req, res) => {
   try {
+    //
+    const { _id } = req.user;
+    validateMongodbId(_id);
+
     const { productId, quantity, price } = req.body;
     if (!productId || !quantity || !price) {
       throw new Error("Please provide all the required fileds.");
     }
-    const { _id } = req.user;
-    validateMongodbId(_id);
+
     let newCart = await new Cart({
       userId: _id,
       productId,

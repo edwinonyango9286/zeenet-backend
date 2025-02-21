@@ -1,15 +1,35 @@
 const mongoose = require("mongoose");
+const {
+  Types: { ObjectId },
+} = require("mongoose");
 
 const blogCategorySchema = new mongoose.Schema(
   {
-    title: {
+    addedBy: {
+      type: ObjectId,
+      ref: "User",
+      required: true,
+      validate: {
+        validator: (id) => {
+          return ObjectId.isValid(id);
+        },
+        message: "Invalid user id.",
+      },
+    },
+    name: {
       type: String,
       required: [true, "Title is required."],
       unique: true,
       index: true,
       trim: true,
-      minlength: [2, "Title must be atleast 2 characters long."],
-      maxlength: [72, "Title must be atmost 72 characters long."],
+      minlength: [2, "Name must be atleast 2 characters long."],
+      maxlength: [72, "Name must be atmost 72 characters long."],
+    },
+    shortDescription: {
+      type: String,
+      required: true,
+      minlength: [2, "Description must be atleast 2 characters long."],
+      maxlength: [500, "Name must be atmost 500 characters long."],
     },
     isDeleted: {
       type: Boolean,
@@ -19,6 +39,11 @@ const blogCategorySchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    visibility: {
+      type: String,
+      enum: ["Published", "Scheduled", "Hidden"],
+      default: "Published",
+    },
   },
   {
     timestamps: true,
@@ -26,7 +51,7 @@ const blogCategorySchema = new mongoose.Schema(
 );
 
 blogCategorySchema.pre("save", function (next) {
-  this.title = this.title.replace(/\b\w/g, (char) => char.toUpperCase());
+  this.name = this.name.replace(/\b\w/g, (char) => char.toUpperCase());
   next();
 });
 

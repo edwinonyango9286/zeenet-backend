@@ -16,14 +16,20 @@ const brandSchema = new mongoose.Schema(
         message: "Invalid user Id",
       },
     },
+    description: {
+      type: String,
+      required: true,
+      minlength: [2, "Description must be atleast 2 characters long."],
+      maxlength: [2000, "Description must be atmost 2000 characters long."],
+    },
     name: {
       type: String,
-      required: [true, "Title is required."],
+      required: [true, "Name is required."],
       unique: true,
       index: true,
       trim: true,
-      minlength: [2, "Title must be atleast 2 characters long."],
-      maxlength: [72, "Title must be atmost 72 characters long."],
+      minlength: [2, "Name must be atleast 2 characters long."],
+      maxlength: [72, "name must be atmost 72 characters long."],
     },
     isDeleted: {
       type: Boolean,
@@ -33,10 +39,18 @@ const brandSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
-    status: {
+    items: {
+      type: Number,
+      default: 0,
+    },
+    vibility: {
       type: String,
-      enum: ["Active", "Inactive"],
-      default: "Active",
+      enum: ["Hidden", "Visible"],
+      default: "Visible",
+    },
+    publishedDate: {
+      type: Date,
+      default: Date,
     },
   },
   { timestamps: true }

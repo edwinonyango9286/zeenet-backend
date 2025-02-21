@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 const {
-  Schema,
   Types: { ObjectId },
 } = require("mongoose");
 
@@ -119,6 +118,16 @@ const productSchema = new mongoose.Schema(
       trim: true,
       enum: ["Featured", "Popular", "Special"],
       index: true,
+    },
+    color: {
+      type: ObjectId,
+      ref: "Color",
+      required: true,
+      validate: {
+        validator: (id) => {
+          return ObjectId.isValid(id);
+        },
+      },
     },
     ratings: [
       {
