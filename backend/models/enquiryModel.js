@@ -8,7 +8,6 @@ const enquirySchema = new mongoose.Schema(
       trim: true,
       minlength: [2, "Enquiry name  must be atleast 2 characters long."],
       maxlength: [72, "Enquiry name must be atmost 72 characters long."],
-      index: true,
     },
     email: {
       type: String,

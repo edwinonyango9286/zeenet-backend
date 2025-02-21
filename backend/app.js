@@ -39,7 +39,7 @@ app.use(cookieParser());
 app.use(morgan("dev"));
 
 // Import and setup routes
-const authRouter = require("./routes/authRoute")
+const authRouter = require("./routes/authRoute");
 const userRouter = require("./routes/userRoute");
 const productRouter = require("./routes/productRoutes");
 const blogRouter = require("./routes/blogRoute");
@@ -55,8 +55,9 @@ const deliveryStationRouter = require("./routes/deliveryStationRoute");
 const countyRouter = require("./routes/countyRoute");
 const deliveryAddressRouter = require("./routes/deliveryAddressRoute");
 const paymentRoute = require("./routes/paymentRoute");
+const colorRouter = require("./routes/colorRoute");
 
-app.use("/api/auth",authRouter)
+app.use("/api/auth", authRouter);
 app.use("/api/user", userRouter);
 app.use("/api/products", productRouter);
 app.use("/api/blog", blogRouter);
@@ -72,5 +73,6 @@ app.use("/api/county", countyRouter);
 app.use("/api/town", townRouter);
 app.use("/api/deliverystation", deliveryStationRouter);
 app.use("/api/deliveryaddress", deliveryAddressRouter);
+app.use("/api/color", colorRouter);
 
 module.exports = app;

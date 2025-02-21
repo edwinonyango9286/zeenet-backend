@@ -2,7 +2,6 @@ const User = require("../models/userModel");
 const jwt = require("jsonwebtoken");
 const asyncHandler = require("express-async-handler");
 const { refreshAccessToken } = require("../controllers/authCtrl");
-const validateMongodbId = require("../utils/validateMongodbId");
 
 const authMiddleware = asyncHandler(async (req, res, next) => {
   try {

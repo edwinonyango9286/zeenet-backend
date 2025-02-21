@@ -26,7 +26,6 @@ const brandSchema = new mongoose.Schema(
       type: String,
       required: [true, "Name is required."],
       unique: true,
-      index: true,
       trim: true,
       minlength: [2, "Name must be atleast 2 characters long."],
       maxlength: [72, "name must be atmost 72 characters long."],
@@ -43,10 +42,10 @@ const brandSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
-    vibility: {
+    visibility: {
       type: String,
-      enum: ["Hidden", "Visible"],
-      default: "Visible",
+      enum: ["Hidden", "Published", "Scheduled"],
+      default: "Published",
     },
     publishedDate: {
       type: Date,
@@ -55,10 +54,5 @@ const brandSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
-
-brandSchema.pre("save", function (next) {
-  this.name = this.name.replace(/\b\w/g, (char) => char.toUpperCase());
-  next();
-});
 
 module.exports = mongoose.model("Brand", brandSchema);

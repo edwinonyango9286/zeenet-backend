@@ -6,7 +6,6 @@ const countrySchema = new mongoose.Schema(
       type: String,
       required: [true, "Name is required."],
       unique: true,
-      index: true,
       trim: true,
       minlength: [2, "Name must be atleast 2 characters long."],
       maxlength: [72, "Name must be atmost 72 characters long."],

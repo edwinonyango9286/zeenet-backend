@@ -21,7 +21,6 @@ const blogSchema = new mongoose.Schema(
       type: String,
       required: [true, "Name is required."],
       trim: true,
-      index: true,
       minlength: [2, "Name must be atleast 2 characters long."],
       maxlength: [72, "Name must be atmost 72 characters long."],
     },
@@ -31,7 +30,6 @@ const blogSchema = new mongoose.Schema(
       minlength: [2, "Short description must be atleast 2 characters long."],
       maxlength: [500, "Short description must be atmost 500 characters long."],
       trim: true,
-      index: true,
     },
     description: {
       type: String,
@@ -39,7 +37,6 @@ const blogSchema = new mongoose.Schema(
       minlength: [2, "Description must be atleast 2 characters long."],
       maxlength: [2000, "Description must be atmost 2000 characters long."],
       trim: true,
-      index: true,
     },
     category: {
       type: ObjectId,

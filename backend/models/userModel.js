@@ -14,7 +14,6 @@ const userSchema = new mongoose.Schema(
       minlength: [2, "First name must be atleast 2 characters long."],
       maxlength: [72, "Last name must be atmost 72 characters long."],
       trim: true,
-      index: true,
     },
     lastName: {
       type: String,
@@ -22,7 +21,6 @@ const userSchema = new mongoose.Schema(
       minlength: [2, "Last name must be at least 2 characters long."],
       maxlength: [72, "Last name must be at most 72 characters long."],
       trim: true,
-      index: true,
     },
     email: {
       type: String,
@@ -33,7 +31,6 @@ const userSchema = new mongoose.Schema(
       maxlength: [72, "Email must be at most 72 characters long."],
       trim: true,
       match: [/.+\@.+\..+/, "Please provide a valid email address"],
-      index: true,
     },
     phoneNumber: {
       type: String,
@@ -42,7 +39,6 @@ const userSchema = new mongoose.Schema(
       unique: true,
       trim: true,
       match: [/^\+?[0-9]\d{1,14}$/, "Please provide a valid phone number"],
-      index: true,
     },
     avatar: {
       type: String,
@@ -56,12 +52,10 @@ const userSchema = new mongoose.Schema(
       trim: true,
       select: false,
     },
-
     role: {
       type: String,
       enum: ["user", "admin"],
     },
-
     isBlocked: {
       type: Boolean,
       default: false,

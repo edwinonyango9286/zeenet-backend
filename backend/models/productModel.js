@@ -19,6 +19,7 @@ const productSchema = new mongoose.Schema(
     productCode: {
       type: String,
       required: [true, "Product code is required."],
+      unique: true,
     },
     name: {
       type: String,
@@ -26,7 +27,6 @@ const productSchema = new mongoose.Schema(
       trim: true,
       minlength: [2, "Title must be at least 2 characters long."],
       maxlength: [100, "Description must be at most 100 characters long"],
-      index: true,
     },
     slug: {
       type: String,
@@ -39,7 +39,6 @@ const productSchema = new mongoose.Schema(
       minlength: [2, "Description must be at least 2 characters long."],
       maxlength: [2000, "Description must be at most 2000 characters long."],
       trim: true,
-      index: true,
     },
     shortDescription: {
       type: String,
@@ -47,7 +46,6 @@ const productSchema = new mongoose.Schema(
       minlength: [2, "Description must be at least 2 characters long."],
       maxlength: [500, "Description must be at most 500 characters long."],
       trim: true,
-      index: true,
     },
     currentPrice: {
       type: Number,
@@ -82,7 +80,7 @@ const productSchema = new mongoose.Schema(
         message: "Invalid brand ID.",
       },
     },
-    quantity: {
+    quantityInStock: {
       type: Number,
       required: [true, "Quantity is required."],
       min: [0, "Quantity must be a positive number."],
@@ -117,7 +115,6 @@ const productSchema = new mongoose.Schema(
       required: [true, "Tags are required."],
       trim: true,
       enum: ["Featured", "Popular", "Special"],
-      index: true,
     },
     color: {
       type: ObjectId,
@@ -179,7 +176,7 @@ const productSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-productSchema.pre("save", (next) => {
+productSchema.pre("save", function (next) {
   this.name = this.name.replace(/\b\w/g, (char) => char.toUpperCase());
   next();
 });

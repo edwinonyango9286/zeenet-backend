@@ -38,7 +38,7 @@ const registerUser = expressAsyncHandler(async (req, res) => {
           name: `${firstName} ${lastName}`,
         },
       };
-      const html = await ejs.renderFile(
+      const htmlContent = await ejs.renderFile(
         path.join(
           __dirname,
           "../mail-templates/accountCreationConfirmation.ejs"
@@ -49,7 +49,7 @@ const registerUser = expressAsyncHandler(async (req, res) => {
         to: createdUser?.email,
         subject: "Account creation confirmation",
         text: "Zeenet e-commerce",
-        html: html,
+        html: htmlContent,
       };
       await sendEmail(data);
     }
@@ -95,7 +95,7 @@ const registerAdmin = expressAsyncHandler(async (req, res) => {
       const userData = {
         createdUser: { name: `${firstName} ${lastName}` },
       };
-      const html = await ejs.renderFile(
+      const htmlContent = await ejs.renderFile(
         path.join(
           __dirname,
           "../mail-templates/accountCreationConfirmation.ejs"
@@ -106,7 +106,7 @@ const registerAdmin = expressAsyncHandler(async (req, res) => {
         to: createdUser?.email,
         subject: "Account creation confirmation",
         text: "Zeenet e-commerce",
-        html: html,
+        html: htmlContent,
       };
       await sendEmail(data);
     }

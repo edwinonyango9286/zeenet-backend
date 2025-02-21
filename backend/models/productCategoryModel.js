@@ -20,7 +20,6 @@ const productCategorySchema = new mongoose.Schema(
       type: String,
       required: [true, "Title is required"],
       unique: true,
-      index: true,
       trim: true,
       minlength: [2, "Title must be atleast 2 characters long."],
       maxlength: [72, "Title must be atmost 72 characters long."],

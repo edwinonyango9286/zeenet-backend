@@ -22,7 +22,12 @@ const colorSchema = new mongoose.Schema(
       trim: true,
       minlength: [2, "Title must be at least 2 characters long."],
       maxlength: [100, "Description must be at most 100 characters long"],
-      index: true,
+    },
+    description: {
+      type: String,
+      required: true,
+      minlength: [2, "Title must be at least 2 characters long."],
+      maxlength: [72, "Description must be at most 72 characters long"],
     },
     isDeleted: {
       type: Boolean,
@@ -32,7 +37,7 @@ const colorSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
-    visiblity: {
+    visibility: {
       type: String,
       enum: ["Published", "Scheduled", "Hidden"],
       default: "Published",
@@ -44,5 +49,11 @@ const colorSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// converts the first letter of the name to uppercase
+colorSchema.pre("save", function (next) {
+  this.name = this.name.replace(/\b\w/g, (char) => char.toUpperCase());
+  next();
+});
 
 module.exports = mongoose.model("Color", colorSchema);

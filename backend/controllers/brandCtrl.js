@@ -1,11 +1,12 @@
 const Brand = require("../models/brandModel");
 const expressAsyncHandler = require("express-async-handler");
 const validateMongodbId = require("../utils/validateMongodbId");
+const _ = require("lodash");
 
 const createBrand = expressAsyncHandler(async (req, res) => {
   try {
-    const { name } = req.body;
-    if (!name) {
+    const { name, description } = req.body;
+    if (!name || !description) {
       throw new Error("Please provide all the required fields.");
     }
     // check for brand with similar name => case insensitive search
@@ -17,7 +18,9 @@ const createBrand = expressAsyncHandler(async (req, res) => {
     }
     const newBrand = await Brand.create({
       ...req.body,
-      // this id is validate at the model level
+      name: _.capitalize(name),
+      description: _.capitalize(description),
+      // this id is validated at the model level
       createdBy: req.user._id,
     });
     return res.status(201).json({
@@ -32,15 +35,19 @@ const createBrand = expressAsyncHandler(async (req, res) => {
 
 const updateBrand = expressAsyncHandler(async (req, res) => {
   try {
-    const { name } = req.body;
-    if (!name) {
+    const { name, description } = req.body;
+    if (!name || description) {
       throw new Error("Please provide all the required fields.");
     }
     const { id } = req.params;
     validateMongodbId(id);
     const updatedBrand = await Brand.findOneAndUpdate(
       { _id: id, createdBy: req.user._id },
-      req.body,
+      {
+        ...req.body,
+        name: _.capitalize(name),
+        description: _.capitalize(description),
+      },
       {
         new: true,
       }
@@ -100,15 +107,24 @@ const getBrand = expressAsyncHandler(async (req, res) => {
   }
 });
 
+// Get all brands by user => users should only see brands whose visibility is published
 const getallBrands = expressAsyncHandler(async (req, res) => {
   try {
     const brands = await Brand.find({
       isDeleted: false,
+      visibility: "Published",
     });
     return res.status(200).json({ status: "SUCCESS", data: brands });
   } catch (error) {
     throw new Error(error);
   }
+});
+
+const getAllBrandsByAdmin = expressAsyncHandler(async (req, res) => {
+  try {
+    // an admin should only see the brands he/she created
+    const brands = await Brand.find({});
+  } catch (error) {}
 });
 
 module.exports = {
