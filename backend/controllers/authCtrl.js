@@ -203,6 +203,7 @@ const signInAdmin = expressAsyncHandler(async (req, res) => {
     });
     res.status(200).json({
       firstName: user.firstName,
+      lastName: user.lastName,
       email: user.email,
       avatar: user.avatar,
       accessToken: accessToken,

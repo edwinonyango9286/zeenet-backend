@@ -71,7 +71,7 @@ const getAColorByIdAdmin = expressAsyncHandler(async (req, res) => {
   }
 });
 
-// Get all colors by users=> users will only see colors whose
+// Get all colors by users => users will only see colors whose
 const getAllColors = expressAsyncHandler(async (req, res) => {
   try {
     const colors = await Color.find({

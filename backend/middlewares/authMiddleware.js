@@ -39,6 +39,7 @@ const authMiddleware = asyncHandler(async (req, res, next) => {
   }
 });
 
+
 const isAdmin = asyncHandler(async (req, res, next) => {
   try {
     const { _id } = req.user;
