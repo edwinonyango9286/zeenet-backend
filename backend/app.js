@@ -21,7 +21,7 @@ app.use(
         callback(new Error("Not allowed by CORS"));
       }
     },
-    methods: ["POST", "GET", "PUT", "DELETE", "OPTIONS", "HEAD"],
+    methods: ["POST", "GET", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"],
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"],
     exposedHeaders: ["Content-Type", "Authorization"],
@@ -39,40 +39,40 @@ app.use(cookieParser());
 app.use(morgan("dev"));
 
 // Import and setup routes
-const authRouter = require("./routes/authRoute");
-const userRouter = require("./routes/userRoute");
+const authRouter = require("./routes/authRoutes");
+const userRouter = require("./routes/userRoutes");
 const productRouter = require("./routes/productRoutes");
-const blogRouter = require("./routes/blogRoute");
-const productCategoryRouter = require("./routes/productCategoryRoute");
+const blogRouter = require("./routes/blogRoutes");
+const productCategoryRouter = require("./routes/productCategoryRoutes");
 const blogCategoryRouter = require("./routes/blogCategoryRoutes");
-const BrandRouter = require("./routes/brandRoute");
-const couponRouter = require("./routes/couponRoute");
-const enquiryRouter = require("./routes/enquiryRoute");
-const uploadRouter = require("./routes/uploadRoute");
-const countryRouter = require("./routes/countryRoute");
-const townRouter = require("./routes/townRoute");
-const deliveryStationRouter = require("./routes/deliveryStationRoute");
-const countyRouter = require("./routes/countyRoute");
-const deliveryAddressRouter = require("./routes/deliveryAddressRoute");
-const paymentRoute = require("./routes/paymentRoute");
-const colorRouter = require("./routes/colorRoute");
+const BrandRouter = require("./routes/brandRoutes");
+const couponRouter = require("./routes/couponRoutes");
+const enquiryRouter = require("./routes/enquiryRoutes");
+const uploadRouter = require("./routes/uploadRoutes");
+const countryRouter = require("./routes/countryRoutes");
+const townRouter = require("./routes/townRoutes");
+const deliveryStationRouter = require("./routes/deliveryStationRoutes");
+const countyRouter = require("./routes/countyRoutes");
+const deliveryAddressRouter = require("./routes/deliveryAddressRoutes");
+const paymentRouter = require("./routes/paymentRoutes");
+const colorRouter = require("./routes/colorRoutes");
 
 app.use("/api/auth", authRouter);
-app.use("/api/user", userRouter);
+app.use("/api/users", userRouter);
 app.use("/api/products", productRouter);
-app.use("/api/blog", blogRouter);
-app.use("/api/productcategory", productCategoryRouter);
-app.use("/api/blogcategory", blogCategoryRouter);
-app.use("/api/productbrand", BrandRouter);
-app.use("/api/coupon", couponRouter);
-app.use("/api/enquiry", enquiryRouter);
-app.use("/api/upload", uploadRouter);
-app.use("/api/payment", paymentRoute);
-app.use("/api/country", countryRouter);
-app.use("/api/county", countyRouter);
-app.use("/api/town", townRouter);
-app.use("/api/deliverystation", deliveryStationRouter);
-app.use("/api/deliveryaddress", deliveryAddressRouter);
-app.use("/api/color", colorRouter);
+app.use("/api/blogs", blogRouter);
+app.use("/api/productCategories", productCategoryRouter);
+app.use("/api/blogCategories", blogCategoryRouter);
+app.use("/api/productBrands", BrandRouter);
+app.use("/api/coupons", couponRouter);
+app.use("/api/enquiries", enquiryRouter);
+app.use("/api/uploads", uploadRouter);
+app.use("/api/payments", paymentRouter);
+app.use("/api/countries", countryRouter);
+app.use("/api/counties", countyRouter);
+app.use("/api/towns", townRouter);
+app.use("/api/delivery-stations", deliveryStationRouter);
+app.use("/api/delivery-addresses", deliveryAddressRouter);
+app.use("/api/colors", colorRouter);
 
 module.exports = app;

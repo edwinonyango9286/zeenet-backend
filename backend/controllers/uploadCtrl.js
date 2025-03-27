@@ -28,7 +28,7 @@ const uploadImages = expressAsyncHandler(async (req, res) => {
 const deleteImages = expressAsyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    if (id) {
+    if (!id) {
       throw new Error("Please provide image Id.");
     }
     const deleted = cloudinaryDeleteImg(id, "images");

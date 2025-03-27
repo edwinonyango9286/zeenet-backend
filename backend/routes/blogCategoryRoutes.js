@@ -1,18 +1,13 @@
 const express = require("express");
-const { isAdmin, authMiddleware } = require("../middlewares/authMiddleware");
-const {
-  addABlogCategory,
-  updateABlogCategory,
-  deleteABlogCategory,
-  getABlogCategory,
-  getAllBlogCategories,
-} = require("../controllers/blogCategoryCtrl");
+const {addABlogCategory,updateABlogCategory,deleteABlogCategory,getABlogCategory,getAllBlogCategories} = require("../controllers/blogCategoryCtrl");
+const { verifyUserToken } = require("../middlewares/authMiddleware");
+const { authorisedRoles } = require("../middlewares/roleMiddleware");
 const router = express.Router();
 
-router.post("/create", authMiddleware, isAdmin, addABlogCategory);
-router.put("/update/:id", authMiddleware, isAdmin, updateABlogCategory);
-router.delete("/delete/:id", authMiddleware, isAdmin, deleteABlogCategory);
-router.get("/get/:id", getABlogCategory);
-router.get("/getblogcategories", getAllBlogCategories);
+router.post("/blogCategories",verifyUserToken, authorisedRoles("Admin", "Manager"), addABlogCategory);
+router.patch("/:id/update", verifyUserToken, authorisedRoles("Admin", "Manager"), updateABlogCategory);
+router.patch("/:id/delete", verifyUserToken, authorisedRoles("Admin", "Manager"), deleteABlogCategory);
+router.get("/:id", getABlogCategory);
+router.get("/blogCategories/all", getAllBlogCategories);
 
 module.exports = router;

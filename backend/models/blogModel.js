@@ -16,27 +16,35 @@ const blogSchema = new mongoose.Schema(
         message: "Invalid object id.",
       },
     },
+    updatedBy: {
+      type: ObjectId,
+      ref: "User",
+      validate: {
+        validator: (id) => {
+          return ObjectId.isValid(id);
+        },
+        message: "Invalid object id.",
+      },
+    },
 
     name: {
       type: String,
       required: [true, "Name is required."],
       trim: true,
       minlength: [2, "Name must be atleast 2 characters long."],
-      maxlength: [72, "Name must be atmost 72 characters long."],
+      maxlength: [100, "Name must be atmost 72 characters long."],
     },
     shortDescription: {
       type: String,
       required: [true, "Description is required."],
       minlength: [2, "Short description must be atleast 2 characters long."],
       maxlength: [500, "Short description must be atmost 500 characters long."],
-      trim: true,
     },
     description: {
       type: String,
       required: [true, "Description is required."],
       minlength: [2, "Description must be atleast 2 characters long."],
       maxlength: [2000, "Description must be atmost 2000 characters long."],
-      trim: true,
     },
     category: {
       type: ObjectId,
@@ -50,7 +58,7 @@ const blogSchema = new mongoose.Schema(
         message: "Invalid blog category ID.",
       },
     },
-    numViews: {
+    numberOfViews: {
       type: Number,
       default: 0,
     },
@@ -66,12 +74,11 @@ const blogSchema = new mongoose.Schema(
       {
         type: ObjectId,
         ref: "User",
-        trim: true,
         validate: {
           validator: function (v) {
             return ObjectId.isValid(v);
           },
-          message: "Invalid user ID.",
+          message: "Invalid user Id.",
         },
       },
     ],
@@ -79,20 +86,14 @@ const blogSchema = new mongoose.Schema(
       {
         type: ObjectId,
         ref: "User",
-        trim: true,
         validate: {
           validator: function (v) {
             return ObjectId.isValid(v);
           },
-          message: "Invalid user ID.",
+          message: "Invalid user Id.",
         },
       },
     ],
-    author: {
-      type: String,
-      default: "admin",
-      trim: true,
-    },
     images: {
       type: [
         {
@@ -122,6 +123,16 @@ const blogSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    deletedBy: {
+      type: ObjectId,
+      ref: "User",
+      validate: {
+        validator: (id) => {
+          return ObjectId.isValid(id);
+        },
+        message: "Invalid object id.",
+      },
+    },
     pusblishedAt: {
       type: Date,
       default: Date.now(),
@@ -143,9 +154,5 @@ const blogSchema = new mongoose.Schema(
   }
 );
 
-blogSchema.pre("save", function (next) {
-  this.name = this.name.replace(/\b\w/g, (char) => char.toUpperCase());
-  next();
-});
 
 module.exports = mongoose.model("Blog", blogSchema);

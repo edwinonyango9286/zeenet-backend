@@ -8,6 +8,7 @@ const jwt = require("jsonwebtoken");
 const emailValidator = require("email-validator");
 const ejs = require("ejs");
 const path = require("path");
+const _ = require("lodash")
 
 //register customer
 const registerUser = expressAsyncHandler(async (req, res) => {
@@ -30,7 +31,7 @@ const registerUser = expressAsyncHandler(async (req, res) => {
         "This email address is already associated with an account. Please double check your email address and try again."
       );
     }
-    const createdUser = await User.create({ ...req.body, role: "user" });
+    const createdUser = await User.create({ ...req.body, firstName: _.startCase(firstName) , lastName:_.startCase(lastName), otherNames: _.startCase(otherNames) , role: "User" });
     // send an email confirmation for account creation.
     if (createdUser) {
       const userData = {
@@ -88,9 +89,65 @@ const registerAdmin = expressAsyncHandler(async (req, res) => {
         "This email address is already associated with an account. Please double check your email address and try again."
       );
     }
-    const createdUser = await User.create({ ...req.body, role: "admin" });
+    const createdUser = await User.create({ ...req.body, firstName: _.startCase(firstName) , lastName:_.startCase(lastName), otherNames: _.startCase(otherNames), role: "Admin" });
     // send an email confirmation for account creation.
 
+    if (createdUser) {
+      const userData = {
+        createdUser: { name: `${firstName} ${lastName}` },
+      };
+      const htmlContent = await ejs.renderFile(
+        path.join(
+          __dirname,
+          "../mail-templates/accountCreationConfirmation.ejs"
+        ),
+        userData
+      );
+      const data = {
+        to: createdUser?.email,
+        subject: "Account creation confirmation",
+        text: "Zeenet e-commerce",
+        html: htmlContent,
+      };
+      await sendEmail(data);
+    }
+    // return user without password.
+    const userWithoutPassword = await User.findById(createdUser?._id).select(
+      "-password"
+    );
+    return res.status(201).json({
+      status: "SUCCESS",
+      message: "Account created successfully.",
+      data: userWithoutPassword,
+    });
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
+//register admin
+const registerManager = expressAsyncHandler(async (req, res) => {
+  try {
+    const { firstName, lastName, email, phoneNumber, password, otherNames } = req.body;
+    if (!firstName || !lastName || !email || !phoneNumber || !password) {
+      throw new Error("Please fill in all the required fields.");
+    }
+    const phoneRegex = /^\+?[0-9]\d{1,14}$/;
+    if (!phoneRegex.test(phoneNumber)) {
+      throw new Error("Please provide a valid phone number.");
+    }
+    validatePassword(password);
+    if (!emailValidator.validate(email)) {
+      throw new Error("Please provide a valid email address.");
+    }
+    const user = await User.findOne({ email });
+    if (user) {
+      throw new Error(
+        "This email address is already associated with an account. Please double check your email address and try again."
+      );
+    }
+    const createdUser = await User.create({ ...req.body, firstName: _.startCase(firstName) , lastName:_.startCase(lastName), otherNames: _.startCase(otherNames), role: "Manager" });
+    // send an email confirmation for account creation.
     if (createdUser) {
       const userData = {
         createdUser: { name: `${firstName} ${lastName}` },
@@ -136,7 +193,7 @@ const signInUser = expressAsyncHandler(async (req, res) => {
     }
     validatePassword(password);
     const user = await User.findOne({ email }).select("+password");
-    if (user.role === "admin") {
+    if (user.role !== "User") {
       throw new Error("Not authorised.");
     }
     if (!user) {
@@ -147,8 +204,8 @@ const signInUser = expressAsyncHandler(async (req, res) => {
     if (user && !(await user.isPasswordMatched(password))) {
       throw new Error("Wrong email or password.");
     }
-    const accessToken = generateAccessToken(user._id);
-    const refreshToken = generateRefreshToken(user._id);
+    const accessToken = generateAccessToken(user._id, user.role);
+    const refreshToken = generateRefreshToken(user._id, user.role);
     user.refreshToken = refreshToken;
     await user.save();
     res.cookie("refreshToken", refreshToken, {
@@ -185,7 +242,50 @@ const signInAdmin = expressAsyncHandler(async (req, res) => {
     if (!user) {
       throw new Error("User not found.");
     }
-    if (user.role !== "admin") {
+    if (user.role !== "Admin") {
+      throw new Error("Not authorised.");
+    }
+    if (!(await user.isPasswordMatched(password))) {
+      throw new Error("Wrong email or password.");
+    }
+    const accessToken = generateAccessToken(user._id);
+    const refreshToken = generateRefreshToken(user._id);
+    user.refreshToken = refreshToken;
+    await user.save();
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "strict",
+      maxAge: parseInt(process.env.REFRESH_TOKEN_MAX_AGE),
+    });
+    res.status(200).json({
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      avatar: user.avatar,
+      accessToken: accessToken,
+    });
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
+
+const signInManager = expressAsyncHandler(async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      throw new Error("Please fill in all the required fields.");
+    }
+    validatePassword(password);
+    if (!emailValidator.validate(email)) {
+      throw new Error("Please provide a valid email address.");
+    }
+    const user = await User.findOne({ email }).select("+password");
+    if (!user) {
+      throw new Error("User not found.");
+    }
+    if (user.role !== "Manager") {
       throw new Error("Not authorised.");
     }
     if (!(await user.isPasswordMatched(password))) {
@@ -281,6 +381,8 @@ module.exports = {
   registerAdmin,
   signInUser,
   signInAdmin,
+  registerManager,
+  signInManager,
   refreshAccessToken,
   logout,
 };

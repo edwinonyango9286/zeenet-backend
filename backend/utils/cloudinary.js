@@ -10,7 +10,6 @@ const cloudinaryUploadImg = async (fileToUploads) => {
   return new Promise((resolve) => {
     cloudinary.uploader.upload(
       fileToUploads,
-      // { folder: "Zeenet" },
       (result) => {
         resolve(
           {
@@ -31,7 +30,6 @@ const cloudinaryDeleteImg = async (fileToDelete) => {
   return new Promise((resolve) => {
     cloudinary.uploader.destroy(
       fileToDelete,
-      // { folder: "Zeenet" },
       (result) => {
         resolve(
           {

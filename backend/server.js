@@ -1,6 +1,6 @@
 // Import the app
 const app = require("./app");
-const dotenv = require("dotenv");
+const dotenv = require("dotenv")
 dotenv.config();
 const { runTheJobs } = require("./crons/index");
 
@@ -16,7 +16,7 @@ if (String(isCronJobsEnabled).toLowerCase() === true) {
 }
 
 // Connect to the database
-const { connect } = require("./config/databaseConnection");
+const { connect } = require("./config/dbConnect");
 connect();
 
 // Start the server

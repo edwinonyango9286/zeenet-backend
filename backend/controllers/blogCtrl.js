@@ -3,19 +3,29 @@ const expressAsyncHandler = require("express-async-handler");
 const validateMongodbId = require("../utils/validateMongodbId");
 const cloudinaryUploadingImg = require("../utils/cloudinary");
 const fs = require("fs");
+const _ = require("lodash")
+const { descriptionFormater}  = require("../utils/stringFormatters");
+const redis = require("../utils/redis");
 
 const createBlog = expressAsyncHandler(async (req, res) => {
   try {
-    const { title, description, category, images } = req.body;
-    if (!title || !description || !category || !images) {
+    const { name, description, shortDescription , category, images } = req.body;
+    if (!name || !description || !category || !images || !shortDescription) {
       throw new Error("Please provide all the required fields.");
     }
-    const newBlog = await Blog.create(req.body);
-    res.status(201).json(newBlog);
+    const createdBlog = await Blog.create({...req.body,  createdBy:req.user._id , name:_.startCase(_.toLower(name)), description: descriptionFormater(description), shortDescription:descriptionFormater(shortDescription)});
+    // invalidate list of all blogs
+    const cacheKey = `blogs:*`;
+    const keys = await redis.keys(cacheKey);
+    keys.forEach((key)=>{redis.del(key)})
+    
+   return res.status(201).json({ status:"SUCCESS", message:"Blog created successfully.", data: createdBlog,});
   } catch (error) {
     throw new Error(error);
   }
 });
+
+
 
 const updateBlog = expressAsyncHandler(async (req, res) => {
   try {
@@ -33,28 +43,49 @@ const updateBlog = expressAsyncHandler(async (req, res) => {
     throw new Error(error);
   }
 });
-
-const getBlog = expressAsyncHandler(async (req, res) => {
+const getABlog = expressAsyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
     validateMongodbId(id);
-    const getBlog = await Blog.findById(id)
-      .populate("likes")
-      .populate("dislikes");
 
-    const updateViews = await Blog.findByIdAndUpdate(
-      id,
-      { $inc: { numViews: 1 } },
-      { new: true }
+    const cacheKey = `blog:${id}`;
+    const cachedBlog = await redis.get(cacheKey);
+
+    // Increment the view count in the database
+    await Blog.findOneAndUpdate(
+      { _id: id, isDeleted: false },
+      { $inc: { numberOfViews: 1 } },
+      { new: true, runValidators: true }
     );
-    res.status(200).json(getBlog);
+
+    // If the blog is cached, return it
+    if (cachedBlog) {
+      const blog = JSON.parse(cachedBlog);
+      blog.numberOfViews += 1;
+      await redis.set(cacheKey, JSON.stringify(blog), "EX", 3600); // Update the cache
+      return res.status(200).json({ status: "SUCCESS", data: blog });
+    }
+
+    // If not cached, fetch from the database
+    const blog = await Blog.findOne({ _id: id, isDeleted: false }).populate({ path: "likes", select: "firstName lastName" }).populate({ path: "dislikes", select: "firstName lastName" }).populate({ path: "createdBy", select: "firstName lastName" }).populate({ path: "updatedBy", select: "firstName lastName" });
+    if (!blog) {
+      throw new Error("Blog not found.")
+    }
+    await redis.set(cacheKey, JSON.stringify(blog), "EX", 3600);
+    return res.status(200).json({ status: "SUCCESS", data: blog });
   } catch (error) {
-    throw new Error(error);
+    throw new Error(error)
   }
 });
 
+
+
+
 const getAllBlogs = expressAsyncHandler(async (req, res) => {
   try {
+
+
+
     const blogs = await Blog.find().populate("category");
     res.status(200).json(blogs);
   } catch (error) {
@@ -214,7 +245,7 @@ const uploadBlogImages = expressAsyncHandler(async (req, res) => {
 module.exports = {
   createBlog,
   updateBlog,
-  getBlog,
+  getABlog,
   getAllBlogs,
   deleteBlog,
   liketheBlog,

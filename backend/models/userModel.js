@@ -1,9 +1,6 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
-
-const {
-  Types: { ObjectId },
-} = require("mongoose");
+const {Types: { ObjectId }} = require("mongoose");
 const crypto = require("crypto");
 
 const userSchema = new mongoose.Schema(
@@ -13,15 +10,18 @@ const userSchema = new mongoose.Schema(
       required: [true, "First name is required."],
       minlength: [2, "First name must be atleast 2 characters long."],
       maxlength: [72, "Last name must be atmost 72 characters long."],
-      trim: true,
     },
     lastName: {
       type: String,
       required: [true, "Last name is required."],
       minlength: [2, "Last name must be at least 2 characters long."],
       maxlength: [72, "Last name must be at most 72 characters long."],
-      trim: true,
     },
+    otherNames: {
+      type: String,
+      maxlength: [72, "Last name must be at most 72 characters long."],
+    },
+
     email: {
       type: String,
       required: [true, "Email is required."],
@@ -29,7 +29,6 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       minlength: [2, "Email must be at least 2 characters long."],
       maxlength: [72, "Email must be at most 72 characters long."],
-      trim: true,
       match: [/.+\@.+\..+/, "Please provide a valid email address"],
     },
     phoneNumber: {
@@ -37,7 +36,6 @@ const userSchema = new mongoose.Schema(
       required: [true, "Phone number is required."],
       maxlength: [15, "Phone number must not exceed 15 characters."],
       unique: true,
-      trim: true,
       match: [/^\+?[0-9]\d{1,14}$/, "Please provide a valid phone number"],
     },
     avatar: {
@@ -54,7 +52,7 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["user", "admin"],
+      enum: ["User", "Admin", "Manager"],
     },
     isBlocked: {
       type: Boolean,
@@ -116,6 +114,25 @@ const userSchema = new mongoose.Schema(
         },
       },
     ],
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
+    deletedAt: {
+      type: Date,
+      default: null,
+    },
+    deletedBy: {
+      type: ObjectId,
+      ref: "User",
+      validate: {
+        validator: function (v) {
+          return ObjectId.isValid(v);
+        },
+        message: "Invalid product ID.",
+      },
+    },
+
     refreshToken: {
       type: String,
       unique: true,
@@ -131,7 +148,6 @@ const userSchema = new mongoose.Schema(
       default: "Default",
     },
   },
-
   { timestamps: true }
 );
 

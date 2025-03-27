@@ -6,13 +6,12 @@ const {
   getDeliveryStation,
   getallDeliveryStations,
 } = require("../controllers/deliveryStationCtrl");
-const { isAdmin, authMiddleware } = require("../middlewares/authMiddleware");
 
 const router = express.Router();
 
-router.post("/create", authMiddleware, isAdmin, createDeliveryStation);
-router.put("/update/:id", authMiddleware, isAdmin, updateDeliveryStation);
-router.delete("/delete/:id", authMiddleware, isAdmin, deleteDeliveryStation);
+router.post("/create",createDeliveryStation);
+router.put("/update/:id",updateDeliveryStation);
+router.delete("/delete/:id",deleteDeliveryStation);
 router.get("/get/:id", getDeliveryStation);
 router.get("/getalldeliverystations", getallDeliveryStations);
 
