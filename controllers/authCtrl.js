@@ -10,7 +10,7 @@ const ejs = require("ejs");
 const path = require("path");
 const _ = require("lodash")
 
-//register customer
+//register user
 const registerUser = expressAsyncHandler(async (req, res) => {
   try {
     const { firstName, lastName, email, phoneNumber, password } = req.body;
@@ -115,11 +115,7 @@ const registerAdmin = expressAsyncHandler(async (req, res) => {
     const userWithoutPassword = await User.findById(createdUser?._id).select(
       "-password"
     );
-    return res.status(201).json({
-      status: "SUCCESS",
-      message: "Account created successfully.",
-      data: userWithoutPassword,
-    });
+    return res.status(201).json({status: "SUCCESS",message: "Account created successfully.",data: userWithoutPassword});
   } catch (error) {
     throw new Error(error);
   }
@@ -171,11 +167,7 @@ const registerManager = expressAsyncHandler(async (req, res) => {
     const userWithoutPassword = await User.findById(createdUser?._id).select(
       "-password"
     );
-    return res.status(201).json({
-      status: "SUCCESS",
-      message: "Account created successfully.",
-      data: userWithoutPassword,
-    });
+    return res.status(201).json({status: "SUCCESS",message: "Account created successfully.",data: userWithoutPassword});
   } catch (error) {
     throw new Error(error);
   }
@@ -214,14 +206,10 @@ const signInUser = expressAsyncHandler(async (req, res) => {
       sameSite: "strict",
       maxAge: parseInt(process.env.REFRESH_TOKEN_MAX_AGE),
     });
-    res.status(200).json({
-      firstName: user?.firstName,
-      lastName: user?.lastName,
-      email: user?.email,
-      phoneNumber: user?.phoneNumber,
-      avatar: user?.avatar,
-      accessToken: accessToken,
-    });
+    const  userWithoutSensitiveData = user.toObject();
+    delete userWithoutSensitiveData.password;
+    delete userWithoutSensitiveData.refreshToken
+    return res.status(200).json({ status:"SUCCESS", user: userWithoutSensitiveData,accessToken: accessToken});
   } catch (error) {
     throw new Error(error);
   }
@@ -258,13 +246,10 @@ const signInAdmin = expressAsyncHandler(async (req, res) => {
       sameSite: "strict",
       maxAge: parseInt(process.env.REFRESH_TOKEN_MAX_AGE),
     });
-    res.status(200).json({
-      firstName: user.firstName,
-      lastName: user.lastName,
-      email: user.email,
-      avatar: user.avatar,
-      accessToken: accessToken,
-    });
+    const userWithoutSensitiveData = user.toObject()
+    delete userWithoutSensitiveData.password;
+    delete userWithoutSensitiveData.refreshToken;
+   return res.status(200).json({status:"SUCCESS", user:userWithoutSensitiveData,accessToken: accessToken});
   } catch (error) {
     throw new Error(error);
   }
@@ -301,13 +286,12 @@ const signInManager = expressAsyncHandler(async (req, res) => {
       sameSite: "strict",
       maxAge: parseInt(process.env.REFRESH_TOKEN_MAX_AGE),
     });
-    res.status(200).json({
-      firstName: user.firstName,
-      lastName: user.lastName,
-      email: user.email,
-      avatar: user.avatar,
-      accessToken: accessToken,
-    });
+
+    const userWithoutSensitiveData = user.toObject();
+    delete userWithoutSensitiveData.password;
+    delete userWithoutSensitiveData.refreshToken;
+
+   return res.status(200).json({ status:"SUCCESS",user:userWithoutSensitiveData,accessToken: accessToken, });
   } catch (error) {
     throw new Error(error);
   }
@@ -322,7 +306,7 @@ const refreshAccessToken = expressAsyncHandler(async (req, res) => {
       throw new Error("Session expired. Please log in to proceed.");
     }
     const refreshToken = cookie.refreshToken;
-    const user = await User.findOne({ refreshToken });
+    const user = await User.findOne({ refreshToken }).select("+refreshToken");
     if (!user) {
       throw new Error(
         "We could not find a user associated with this refresh token."

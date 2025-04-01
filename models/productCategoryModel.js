@@ -1,7 +1,5 @@
 const mongoose = require("mongoose");
-const {
-  Types: { ObjectId },
-} = require("mongoose");
+const {Types: { ObjectId }} = require("mongoose");
 
 const productCategorySchema = new mongoose.Schema(
   {
@@ -16,19 +14,32 @@ const productCategorySchema = new mongoose.Schema(
         message: "Invalid category id.",
       },
     },
+
+    updatedBy: {
+      type: ObjectId,
+      ref: "User",
+      validate: {
+        validator: (id) => {
+          return ObjectId.isValid(id);
+        },
+        message: "Invalid category id.",
+      },
+    },
     name: {
       type: String,
-      required: [true, "Title is required"],
-      unique: true,
-      trim: true,
-      minlength: [2, "Title must be atleast 2 characters long."],
-      maxlength: [72, "Title must be atmost 72 characters long."],
+      required: [true, "Name is required"],
+      minlength: [2, "Name must be atleast 2 characters long."],
+      maxlength: [72, "Name must be atmost 72 characters long."],
     },
     description: {
       type: String,
       required: true,
-      minlength: [2, "Title must be atleast 2 characters long."],
-      maxlength: [2000, "Title must be atmost 2000 characters long."],
+      minlength: [2, "Description must be atleast 2 characters long."],
+      maxlength: [2000, "Description must be atmost 2000 characters long."],
+    },
+    slug:{
+      type:String,
+      required:true,
     },
     isDeleted: {
       type: Boolean,
@@ -37,6 +48,16 @@ const productCategorySchema = new mongoose.Schema(
     deletedAt: {
       type: Date,
       default: null,
+    },
+    deletedBy: {
+      type: ObjectId,
+      ref: "User",
+      validate: {
+        validator: (id) => {
+          return ObjectId.isValid(id);
+        },
+        message: "Invalid category id.",
+      },
     },
     items: {
       type: Number,
@@ -54,10 +75,5 @@ const productCategorySchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
-
-productCategorySchema.pre("save", function (next) {
-  this.name = this.name.replace(/\b\w/g, (char) => char.toUpperCase());
-  next();
-});
 
 module.exports = mongoose.model("ProductCategory", productCategorySchema);

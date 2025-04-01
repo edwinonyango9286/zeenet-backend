@@ -202,9 +202,7 @@ const getallProducts = expressAsyncHandler(async (req, res) => {
     query = query.skip(offset).limit(limit);
 
     // Caching
-    const cacheKey = `products:${JSON.stringify(queryObject)}:${
-      req.query.sort
-    }:${req.query.fields}:${limit}:${offset}`;
+    const cacheKey = `products:${JSON.stringify(queryObject)}:${req.query.sort}:${req.query.fields}:${limit}:${offset}`;
     const cachedProducts = await redis.get(cacheKey);
     if (cachedProducts) {
       return res.status(200).json(JSON.parse(cachedProducts));

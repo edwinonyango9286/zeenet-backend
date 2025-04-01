@@ -3,7 +3,7 @@ const expressAsyncHandler = require("express-async-handler");
 const validateMongodbId = require("../utils/validateMongodbId");
 const redis = require("../utils/redis");
 const _ = require("lodash");
-const { descriptionFormater } = require("../utils/stringFormatters");
+const { paragraphFormater } = require("../utils/stringFormatters");
 
 const addABlogCategory = expressAsyncHandler(async (req, res) => {
   try {
@@ -16,7 +16,7 @@ const addABlogCategory = expressAsyncHandler(async (req, res) => {
     if(existingBlogCategory){
       throw new Error(`Blog category ${existingBlogCategory.name} already exist.`)
     }
-    const createdBlogCategory = await BlogCategory.create({...req.body,name:_.startCase(_.toLower(name)), shortDescription: descriptionFormater(shortDescription), createdBy: req.user._id});
+    const createdBlogCategory = await BlogCategory.create({...req.body,name:_.startCase(_.toLower(name)), shortDescription: paragraphFormater(shortDescription), createdBy: req.user._id});
     // Invalidate list of blog categories 
     const cacheKey = `blogCategories:*`;
     const keys = await redis.keys(cacheKey);
@@ -39,7 +39,7 @@ const updateABlogCategory = expressAsyncHandler(async (req, res) => {
     validateMongodbId(id);
 
     // Update the blog category
-    const updatedBlogCategory = await BlogCategory.findOneAndUpdate({ _id: id, isDeleted: false },{...req.body,name: _.startCase(_.toLower(name)),shortDescription: descriptionFormater(shortDescription),updatedBy: req.user._id},{ new: true, runValidators: true });
+    const updatedBlogCategory = await BlogCategory.findOneAndUpdate({ _id: id, isDeleted: false },{...req.body,name: _.startCase(_.toLower(name)),shortDescription: paragraphFormater(shortDescription),updatedBy: req.user._id},{ new: true, runValidators: true });
     if (!updatedBlogCategory) {
       throw new Error("Blog category not found.");
     }
@@ -132,8 +132,8 @@ const getAllBlogCategories = expressAsyncHandler(async (req, res) => {
     }
 
     // Pagination
-    const limit = Math.min(parseInt(req.query.limit, 10) || 10, 100);
-    const offset = Math.max(parseInt(req.query.offset, 10) || 0, 0);
+    const limit = Math.min(parseInt(req.query.limit, 10) || 10,100);
+    const offset = Math.max(parseInt(req.query.offset, 10) || 0,0);
     query = query.skip(offset).limit(limit);
 
     // Caching categories
@@ -142,7 +142,8 @@ const getAllBlogCategories = expressAsyncHandler(async (req, res) => {
     
     if (cachedBlogCategories) {
       const cachedData = JSON.parse(cachedBlogCategories);
-      return res.status(200).json({status: "SUCCESS",data: cachedData.data,totalCount: cachedData.totalCount,totalPages: cachedData.totalPages,limit,offset})}
+      return res.status(200).json({status: "SUCCESS",data: cachedData.data,totalCount: cachedData.totalCount,totalPages: cachedData.totalPages,limit,offset})
+    }
 
     const blogCategories = await query;
     const totalCount = await BlogCategory.countDocuments({ ...queryObject, isDeleted: false });

@@ -56,6 +56,7 @@ const countyRouter = require("./routes/countyRoutes");
 const deliveryAddressRouter = require("./routes/deliveryAddressRoutes");
 const paymentRouter = require("./routes/paymentRoutes");
 const colorRouter = require("./routes/colorRoutes");
+const productParentCategoryRouter = require("./routes/productParentCategoryRoutes")
 
 app.use("/api/auth", authRouter);
 app.use("/api/users", userRouter);
@@ -71,8 +72,9 @@ app.use("/api/payments", paymentRouter);
 app.use("/api/countries", countryRouter);
 app.use("/api/counties", countyRouter);
 app.use("/api/towns", townRouter);
-app.use("/api/delivery-stations", deliveryStationRouter);
-app.use("/api/delivery-addresses", deliveryAddressRouter);
+app.use("/api/deliveryStations", deliveryStationRouter);
+app.use("/api/deliveryAddresses", deliveryAddressRouter);
 app.use("/api/colors", colorRouter);
+app.use("/api/productParentCategories", productParentCategoryRouter)
 
 module.exports = app;
